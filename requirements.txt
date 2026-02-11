@@ -1,27 +1,14 @@
-# Core LiveKit and Agent SDK
-livekit>=1.5.0
-livekit-agents>=0.10.0
-
-# Google Plugin for LiveKit (enables native Gemini 2.0/2.5)
-livekit-plugins-google>=0.1.0
-
-# Media processing (Crucial for Audio/Video handling)
+livekit>=1.0.25
+livekit-agents>=0.12.0
+livekit-plugins-google>=0.8.0
 av>=12.0.0
-
-# Google Generative AI
 google-genai>=1.0.0
-
-# Memory management and Database
 mem0ai>=0.1.0
 qdrant-client>=1.9.0
-
-# Web Server and API
 flask>=3.0.0
 flask-cors>=4.0.0
 gunicorn>=21.0.0
 PyJWT>=2.8.0
-
-# Utilities
 python-dotenv>=1.0.0
 aiohttp>=3.9.0
 requests>=2.31.0
