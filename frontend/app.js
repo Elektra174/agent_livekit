@@ -81,12 +81,20 @@ class DirectOmniAgentApp {
                 console.log("[DEBUG] WebSocket connected.");
                 this.isConnected = true;
                 this.textChatWindow?.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
-                
+
                 // Мы НЕ отправляем 'setup'. Сервер сам подключается к Google.
                 // Просто ждем сообщения от сервера.
-                
+
+
                 // Запускаем обработку аудио с микрофона
                 this.initAudio(stream);
+
+                // Запускаем пинг для предотвращения таймаута на Render
+                this.pingInterval = setInterval(() => {
+                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                        this.ws.send(JSON.stringify({ client_content: { ping: true } }));
+                    }
+                }, 20000);
             };
 
             this.ws.onmessage = async (event) => {
@@ -117,9 +125,10 @@ class DirectOmniAgentApp {
     }
 
     async initAudio(stream) {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+        // Gemini Multimodal Live API использует 24000 Гц для вывода
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
         this.inputSource = this.audioContext.createMediaStreamSource(stream);
-        
+
         // Создаем ScriptProcessor для чтения аудио
         this.processor = this.audioContext.createScriptProcessor(2048, 1, 1);
 
@@ -134,7 +143,7 @@ class DirectOmniAgentApp {
                 realtimeInput: {
                     mediaChunks: [{
                         data: this.arrayBufferToBase64(pcmData.buffer),
-                        mimeType: "audio/pcm;rate=16000"
+                        mimeType: "audio/pcm;rate=24000"
                     }]
                 }
             };
@@ -168,9 +177,9 @@ class DirectOmniAgentApp {
         // Примечание: backend отправляет camelCase (serverContent)
         if (response.serverContent && response.serverContent.modelTurn) {
             const parts = response.serverContent.modelTurn.parts;
-            
+
             let textOutput = "";
-            
+
             for (const part of parts) {
                 if (part.inlineData && part.inlineData.data) {
                     // Добавляем аудио в очередь на воспроизведение
@@ -218,13 +227,14 @@ class DirectOmniAgentApp {
 
         this.isPlaying = true;
         const chunk = this.playbackBuffer.shift();
-        const buffer = this.audioContext.createBuffer(1, chunk.length, 16000);
+        // Указываем 24000, так как Gemini присылает данные именно в этой частоте
+        const buffer = this.audioContext.createBuffer(1, chunk.length, 24000);
         buffer.getChannelData(0).set(chunk);
 
         const source = this.audioContext.createBufferSource();
         source.buffer = buffer;
         source.connect(this.audioContext.destination);
-        
+
         // Анимация при воспроизведении
         this.targetScale = 1.5;
 
@@ -257,6 +267,7 @@ class DirectOmniAgentApp {
         this.isConnected = false;
         if (this.ws) this.ws.close();
         if (this.audioContext) this.audioContext.close();
+        if (this.pingInterval) clearInterval(this.pingInterval);
 
         this.setConnectionStatus('disconnected');
         this.addMessage("Сессия завершена", "system");
@@ -288,11 +299,11 @@ class DirectOmniAgentApp {
         const update = () => {
             this.analyser.getByteFrequencyData(dataArray);
             let sum = 0;
-            for(let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+            for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
             const avg = sum / dataArray.length;
 
             // Плавная анимация масштаба
-            const volumeScale = 1.0 + (avg / 100); 
+            const volumeScale = 1.0 + (avg / 100);
             this.currentScale += (volumeScale - this.currentScale) * 0.2;
 
             if (this.energyOrb) {
