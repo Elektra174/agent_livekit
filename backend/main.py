@@ -104,7 +104,8 @@ async def websocket_endpoint(websocket: WebSocket):
                             for chunk in chunks:
                                 if "data" in chunk:
                                     audio_bytes = base64.b64decode(chunk["data"])
-                                    await session.send(input_audio=audio_bytes, end_of_turn=False)
+                                    # В новом google-genai используем send_realtime_input
+                                    await session.send_realtime_input(audio=audio_bytes)
                         
                         elif "client_content" in message:
                             # Обработка текстовых команд или других данных
