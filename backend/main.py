@@ -45,8 +45,20 @@ async def websocket_endpoint(websocket: WebSocket):
                         "voice_name": "Puck"
                     }
                 }
+            },
+            # Автоматическое сжатие контекста при превышении 20 000 токенов
+            "context_window_compression": {
+                "sliding_window": {},
+                "trigger_tokens": 20000
             }
         }
+
+        # Проверяем, прислал ли клиент токен для восстановления сессии
+        initial_message = await websocket.receive_text()
+        initial_data = json.loads(initial_message)
+        if "setup" in initial_data and "resumption_handle" in initial_data["setup"]:
+            config["resumption_handle"] = initial_data["setup"]["resumption_handle"]
+            print(f"[PROXY] Attempting to resume session with handle: {config['resumption_handle'][:10]}...")
 
         async with client.aio.live.connect(model=MODEL_ID, config=config) as session:
             print("[PROXY] Successfully connected to Gemini Live API!")
@@ -85,6 +97,17 @@ async def websocket_endpoint(websocket: WebSocket):
                             
                             if response_data["serverContent"]["modelTurn"]["parts"]:
                                 await websocket.send_text(json.dumps(response_data))
+                        
+                        # Передаем токены возобновления сессии клиенту
+                        if message.session_resumption_update:
+                            update = message.session_resumption_update
+                            if update.new_handle:
+                                print(f"[PROXY] Received new resumption handle: {update.new_handle[:10]}...")
+                                await websocket.send_text(json.dumps({
+                                    "serverContent": {
+                                        "resumptionToken": update.new_handle
+                                    }
+                                }))
 
                 except Exception as e:
                     print(f"[ERROR] google_to_client error: {e}")
@@ -109,7 +132,12 @@ async def websocket_endpoint(websocket: WebSocket):
                                     })
                         
                         elif "client_content" in message:
-                            pass
+                            # Обработка текстовых сообщений от клиента (если есть)
+                            if "turns" in message["client_content"]:
+                                await session.send_client_content(
+                                    turns=message["client_content"]["turns"],
+                                    turn_complete=message["client_content"].get("turn_complete", True)
+                                )
                                 
                 except WebSocketDisconnect:
                     print("[PROXY] Client disconnected.")
