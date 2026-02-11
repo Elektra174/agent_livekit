@@ -50,7 +50,10 @@ class DirectOmniAgentApp {
     }
 
     async connect() {
-        if (this.isConnected) return;
+        if (this.isConnected || (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING))) {
+            console.warn("[DEBUG] Connection already in progress or established.");
+            return;
+        }
 
         try {
             this.setConnectionStatus('connecting');
@@ -73,6 +76,7 @@ class DirectOmniAgentApp {
             // Cleanup existing if any
             if (this.ws) {
                 this.ws.onclose = null;
+                this.ws.onerror = null;
                 this.ws.close();
             }
 
@@ -93,12 +97,23 @@ class DirectOmniAgentApp {
                 // Show chat window
                 this.textChatWindow?.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
 
-                // Send initial setup
+                // Send initial setup - using strict format as per user's "Джун" insights
                 const savedLanguage = localStorage.getItem('target_lang') || 'Russian';
                 const setupMessage = {
                     setup: {
+                        model: "models/gemini-2.0-flash-exp",
+                        generationConfig: {
+                            responseModalities: ["AUDIO"],
+                            speechConfig: {
+                                voiceConfig: {
+                                    prebuiltVoiceConfig: {
+                                        voiceName: "Puck"
+                                    }
+                                }
+                            }
+                        },
                         systemInstruction: {
-                            parts: [{ text: `Ты — добрый и весёлый ИИ-друг для детей по имени Омни-Агент. Говори на языке: ${savedLanguage}. Говори просто, весело и подбадривающе.` }]
+                            parts: [{ text: `Ты — добрый и весёлый ИИ-друг для детей по имени Омни-Агент. Говори на языке: ${savedLanguage}. Говори просто, весело и подбадривающе. НИКАКИХ "МЫСЛЕЙ" (**Thought**) В ВЫВОДЕ.` }]
                         }
                     }
                 };
