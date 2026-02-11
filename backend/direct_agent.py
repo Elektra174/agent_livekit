@@ -60,8 +60,8 @@ class DirectOmniAgent:
         try:
             while True:
                 data = self.input_stream.read(CHUNK, exception_on_overflow=False)
-                # Send as bytes for the live connect session
-                await session.send(input_audio=data, end_of_turn=False)
+                # Send as bytes for the live connect session using send_realtime_input
+                await session.send_realtime_input(audio=data)
                 await asyncio.sleep(0) # Yield for other tasks
         except Exception as e:
             print(f"[!] Error in send loop: {e}")
