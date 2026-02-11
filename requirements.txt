@@ -1,12 +1,6 @@
-# Google Generative AI
 google-genai>=0.2.0
-
-# Hardware interaction
-pyaudio
-
-# Utilities
-python-dotenv>=1.0.0
-aiohttp>=3.9.0
-requests>=2.31.0
-mem0ai>=0.1.0
-qdrant-client>=1.9.0
+fastapi>=0.110.0
+uvicorn>=0.27.0
+websockets>=12.0
+python-dotenv
+flask-cors>=4.0.0
