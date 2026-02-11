@@ -37,11 +37,12 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         config = {
-            "system_instruction": """Ты — дружелюбный ИИ-помощник Омни. 
-ВАЖНО: Отвечай ТОЛЬКО финальным текстом для произнесения вслух. 
-НИКОГДА не выводи свои внутренние размышления, такие как 'Crafting a Response' или 'I've registered...'. 
-Твой ответ должен содержать только то, что ты сказал бы человеку напрямую. 
-Будь проактивным, поддерживай диалог, отвечай кратко и тепло.""",
+            "system_instruction": """Ты — Омни, живой и энергичный ИИ-помощник. 
+ПРАВИЛА:
+1. Отвечай ТОЛЬКО голосом. Твой ответ — это то, что ты говоришь собеседнику.
+2. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО выводить любые технические размышления или статусы типа '**Initiating A Dialogue**' или '**Formulating a response**'. Если видишь такое в своих мыслях — удаляй и не пиши.
+3. Будь инициативным. После приветствия не просто жди, а предложи тему для разговора или спроси, как прошел день.
+4. Говори кратко, но дружелюбно. Поддерживай живой диалог.""",
             "response_modalities": ["AUDIO"],
             "speech_config": {
                 "voice_config": {
@@ -87,7 +88,14 @@ async def websocket_endpoint(websocket: WebSocket):
                             
                             for part in parts:
                                 part_dict = {}
+                                
+                                # Фильтруем "мысли" агента (текст в двойных звездочках или тех. заголовки)
                                 if part.text:
+                                    clean_text = part.text.strip()
+                                    if clean_text.startswith("**") and clean_text.endswith("**"):
+                                        continue
+                                    if "Initiating" in clean_text or "formulating" in clean_text.lower():
+                                        continue
                                     part_dict["text"] = part.text
                                 
                                 if part.inline_data:
