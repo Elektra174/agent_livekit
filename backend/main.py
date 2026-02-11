@@ -32,14 +32,23 @@ async def get_index():
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    print("[DEBUG] Client connected to proxy WS")
+    print("\n[PROXY] Клиент подключен")
 
     client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'api_version': 'v1alpha'})
     
     try:
-        # Fixed config to avoid deprecation warning
-        config = {"response_modalities": ["audio"]}
+        print(f"[PROXY] Попытка подключения к Google Gemini ({MODEL_ID})...")
+        
+        # Конфигурация согласно запросу пользователя (с учетом версии SDK)
+        # Примечание: В новых версиях SDK response_modalities задается напрямую в корне конфига
+        config = {
+            "generation_config": {
+                "response_modalities": ["AUDIO"]
+            }
+        }
+        
         async with client.aio.live.connect(model=MODEL_ID, config=config) as session:
+            print("[PROXY] Сессия с Google Gemini успешно установлена")
             
             async def google_to_client():
                 """Forward messages from Gemini to the browser."""
@@ -68,7 +77,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             
                             await websocket.send_text(json.dumps(response_data))
                 except Exception as e:
-                    print(f"[DEBUG] Error in google_to_client: {e}")
+                    print(f"[DEBUG] Ошибка в google_to_client: {e}")
 
             async def client_to_google():
                 """Forward messages from the browser to Gemini."""
@@ -80,7 +89,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         if "realtime_input" in message:
                             for chunk in message["realtime_input"]["media_chunks"]:
                                 pcm_data = base64.b64decode(chunk["data"])
-                                # Send as a single positional dictionary argument
+                                # Отправка в формате словаря для совместимости
                                 await session.send({
                                     "realtime_input": {
                                         "media_chunks": [{
@@ -91,26 +100,25 @@ async def websocket_endpoint(websocket: WebSocket):
                                 })
                         
                         elif "setup" in message:
-                            print(f"[DEBUG] Received setup from client: {message['setup']}")
+                            print(f"[DEBUG] Получена настройка от клиента: {message['setup']}")
                 except WebSocketDisconnect:
-                    print("[DEBUG] Client disconnected")
+                    print("[PROXY] Клиент разорвал соединение")
                 except Exception as e:
-                    print(f"[DEBUG] Error in client_to_google: {e}")
+                    print(f"[DEBUG] Ошибка в client_to_google: {e}")
 
-            # Run both tasks concurrently
+            # Запуск обоих задач параллельно
             await asyncio.gather(google_to_client(), client_to_google())
 
     except Exception as e:
         error_msg = str(e)
+        print(f"\n[КРИТИЧЕСКАЯ ОШИБКА] Не удалось установить сессию с Google: {error_msg}")
+        
         if "User location is not supported" in error_msg:
-            print("\n" + "!"*60)
+            print("!"*60)
             print("ОШИБКА: Твой регион не поддерживается Google Gemini Multimodal Live API.")
-            print("Google ограничивает доступ к этой функции в некоторых странах (например, РФ).")
-            print("РЕШЕНИЕ: Либо используй VPN локально, либо задеплой этого агента на Render.")
-            print("На серверах Render (США/Европа) всё будет работать отлично!")
-            print("!"*60 + "\n")
-        else:
-            print(f"[DEBUG] Session error: {e}")
+            print("РЕШЕНИЕ: Используй VPN локально или деплой на Render.")
+            print("!"*60)
+        
         await websocket.close()
 
 # Serve static files
@@ -119,4 +127,5 @@ if os.path.exists(FRONTEND_DIR):
 
 if __name__ == "__main__":
     import uvicorn
+    # Запуск на порту 5000
     uvicorn.run(app, host="0.0.0.0", port=5000)
