@@ -37,7 +37,11 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         config = {
-            "system_instruction": "Ты — дружелюбный ИИ-помощник Омни. Отвечай кратко и по делу. Ты общаешься голосом, поэтому твои ответы должны быть разговорными.",
+            "system_instruction": """Ты — дружелюбный ИИ-помощник Омни. 
+ВАЖНО: Отвечай ТОЛЬКО финальным текстом для произнесения вслух. 
+НИКОГДА не выводи свои внутренние размышления, такие как 'Crafting a Response' или 'I've registered...'. 
+Твой ответ должен содержать только то, что ты сказал бы человеку напрямую. 
+Будь проактивным, поддерживай диалог, отвечай кратко и тепло.""",
             "response_modalities": ["AUDIO"],
             "speech_config": {
                 "voice_config": {
@@ -97,6 +101,24 @@ async def websocket_endpoint(websocket: WebSocket):
                             
                             if response_data["serverContent"]["modelTurn"]["parts"]:
                                 await websocket.send_text(json.dumps(response_data))
+                        
+                        # Передаем транскрипцию пользовательской речи
+                        if message.server_content and message.server_content.input_transcription:
+                            await websocket.send_text(json.dumps({
+                                "serverContent": {
+                                    "inputTranscription": {
+                                        "text": message.server_content.input_transcription.text
+                                    }
+                                }
+                            }))
+                        
+                        # Передаем прерывание (интеррапт)
+                        if message.server_content and message.server_content.interrupted:
+                            await websocket.send_text(json.dumps({
+                                "serverContent": {
+                                    "interrupted": True
+                                }
+                            }))
                         
                         # Передаем токены возобновления сессии клиенту
                         if message.session_resumption_update:
