@@ -26,7 +26,7 @@ class DirectOmniAgentApp {
         this.chatMessages = document.getElementById('chatMessages');
         this.chatModal = document.getElementById('chatModal');
         this.closeChatBtn = document.getElementById('closeChatBtn');
-        this.modalOverlay = document.getElementById('modalOverlay');
+        this.modalOverlay = null; // Removed overlay
 
         // Audio Context
         this.audioContext = null;
@@ -56,14 +56,13 @@ class DirectOmniAgentApp {
     showChat() {
         if (this.chatModal) {
             this.chatModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            // document.body.style.overflow = 'hidden'; // Don't block scroll if integrated
         }
     }
 
     hideChat() {
         if (this.chatModal) {
             this.chatModal.classList.add('hidden');
-            document.body.style.overflow = '';
         }
     }
 
@@ -227,7 +226,14 @@ class DirectOmniAgentApp {
             }
         }
 
-        // 2. Обрабатываем контент (Текст или Аудио)
+        // 1.3 Прерывание (Interrupt)
+        if (response.serverContent && response.serverContent.interrupted) {
+            console.log("[DEBUG] Interrupted by user. Clearing playback buffer.");
+            this.playbackBuffer = [];
+            this.isPlaying = false;
+            // Остановить текущий источник, если есть (Web Audio API это умеет через close/stop, 
+            // но проще просто обнулить очередь для текущего чанка)
+        }
         // Примечание: backend отправляет camelCase (serverContent)
         if (response.serverContent && response.serverContent.modelTurn) {
             const parts = response.serverContent.modelTurn.parts;
@@ -258,11 +264,11 @@ class DirectOmniAgentApp {
         wrapper.className = `flex w-full mb-4 animate-in slide-in-from-bottom-2 duration-300 ${role === 'user' ? 'justify-end' : 'justify-start'}`;
 
         const bubble = document.createElement('div');
-        // Premium styles
+        // Premium styles - higher transparency for the integrated panel
         if (role === 'user') {
-            bubble.className = "max-w-[85%] px-5 py-3 rounded-2xl bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg text-sm leading-relaxed border border-white/10";
+            bubble.className = "max-w-[85%] px-4 py-2.5 rounded-2xl bg-gradient-to-br from-primary/80 to-purple-600/80 text-white shadow-lg text-xs leading-relaxed border border-white/10 backdrop-blur-sm";
         } else {
-            bubble.className = "max-w-[85%] px-5 py-3 rounded-2xl bg-white/5 backdrop-blur-md text-slate-100 shadow-md text-sm leading-relaxed border border-white/5";
+            bubble.className = "max-w-[85%] px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md text-slate-100 shadow-sm text-xs leading-relaxed border border-white/5";
         }
 
         bubble.textContent = text;
