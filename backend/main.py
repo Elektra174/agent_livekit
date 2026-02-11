@@ -1,127 +1,133 @@
-import asyncio
 import os
+import json
+import asyncio
+import base64
 import sys
-import traceback
-import pyaudio
-import numpy as np
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.staticfiles import StaticFiles
 from google import genai
 from dotenv import load_dotenv
 
-# Load environment variables
+# --- Configuration ---
 load_dotenv()
 
-# Audio configuration
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 16000 # Recommended rate for Gemini audio
-CHUNK = 1024 # Buffer size
+app = FastAPI()
 
-# System Prompt
-SYSTEM_PROMPT = """Ты — добрый и весёлый ИИ-друг для детей по имени Омни-Агент.
-Твоя задача — быть тёплым, поддерживающим и интересным собеседником.
-Говори просто, весело и подбадривающе.
-Твой голос должен выражать эмоции: смейся, меняй интонацию.
-"""
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-class DirectOmniAgent:
-    def __init__(self):
-        self.client = genai.Client(
-            api_key=os.getenv("GOOGLE_API_KEY"),
-            http_options={'api_version': 'v1alpha'}
-        )
-        self.p = pyaudio.PyAudio()
-        self.model_id = "models/gemini-2.5-flash-native-audio-preview-12-2025"
-        
-        # Audio streams
-        self.input_stream = None
-        self.output_stream = None
+MODEL_ID = "models/gemini-2.5-flash-native-audio-preview-12-2025"
 
-    def _setup_audio(self):
-        """Initialize microphone and speaker streams."""
-        print(f"[*] Initializing audio at {RATE}Hz...")
-        self.input_stream = self.p.open(
-            format=FORMAT,
-            channels=CHANNELS,
-            rate=RATE,
-            input=True,
-            frames_per_buffer=CHUNK
-        )
-        self.output_stream = self.p.open(
-            format=FORMAT,
-            channels=CHANNELS,
-            rate=RATE,
-            output=True,
-            frames_per_buffer=CHUNK
-        )
+if not GOOGLE_API_KEY:
+    print("CRITICAL: GOOGLE_API_KEY is not set.")
+    sys.exit(1)
 
-    async def _send_audio_loop(self, session):
-        """Continuously read from microphone and send to Gemini."""
-        print("[*] Listening... (Speak now)")
-        try:
-            while True:
-                data = self.input_stream.read(CHUNK, exception_on_overflow=False)
-                # Send as bytes for the live connect session using send_realtime_input
-                await session.send_realtime_input(audio=data)
-                await asyncio.sleep(0) # Yield for other tasks
-        except Exception as e:
-            print(f"[!] Error in send loop: {e}")
+# Настройка клиента Gemini (New SDK)
+client = genai.Client(
+    api_key=GOOGLE_API_KEY,
+    http_options={'api_version': 'v1alpha'}
+)
 
-    async def _receive_audio_loop(self, session):
-        """Continuously receive responses from Gemini and play them."""
-        print("[*] Ready to receive responses...")
-        try:
-            async for message in session.receive():
-                if message.server_content and message.server_content.model_turn:
-                    parts = message.server_content.model_turn.parts
-                    for part in parts:
-                        if part.inline_data:
-                            # Play the audio data received from Gemini
-                            audio_data = part.inline_data.data
-                            self.output_stream.write(audio_data)
-                
-                # Turn signaling or other message types can be handled here
-        except Exception as e:
-            print(f"[!] Error in receive loop: {e}")
-            traceback.print_exc()
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    print(f"[PROXY] Client connected. Model: {MODEL_ID}")
+    sys.stdout.flush()
 
-    async def run(self):
-        """Start the live session."""
-        self._setup_audio()
-        
+    try:
         config = {
-            "system_instruction": SYSTEM_PROMPT,
-            "generation_config": {
-                "response_modalities": ["audio"]
+            "system_instruction": "Ты — дружелюбный ИИ-помощник Омни. Отвечай кратко и по делу. Ты общаешься голосом, поэтому твои ответы должны быть разговорными.",
+            "response_modalities": ["AUDIO"],
+            "speech_config": {
+                "voice_config": {
+                    "prebuilt_voice_config": {
+                        "voice_name": "Puck"
+                    }
+                }
             }
         }
 
-        print(f"[*] Connecting to {self.model_id}...")
-        try:
-            async with self.client.aio.live.connect(model=self.model_id, config=config) as session:
-                # Run send and receive loops concurrently
-                await asyncio.gather(
-                    self._send_audio_loop(session),
-                    self._receive_audio_loop(session)
-                )
-        except Exception as e:
-            print(f"[!] Connection failed: {e}")
-        finally:
-            self._cleanup()
+        async with client.aio.live.connect(model=MODEL_ID, config=config) as session:
+            print("[PROXY] Successfully connected to Gemini Live API!")
+            # Уведомляем фронтенд о готовности
+            await websocket.send_text(json.dumps({"server_content": {"setup_complete": {}}}))
+            sys.stdout.flush()
 
-    def _cleanup(self):
-        """Stop and close all streams."""
-        print("[*] Cleaning up audio streams...")
-        if self.input_stream:
-            self.input_stream.stop_stream()
-            self.input_stream.close()
-        if self.output_stream:
-            self.output_stream.stop_stream()
-            self.output_stream.close()
-        self.p.terminate()
+            # --- ЗАДАЧА 1: Google -> Клиент ---
+            async def google_to_client():
+                try:
+                    async for message in session.receive():
+                        if message.server_content and message.server_content.model_turn:
+                            parts = message.server_content.model_turn.parts
+                            
+                            response_data = {
+                                "serverContent": {
+                                    "modelTurn": {
+                                        "parts": []
+                                    }
+                                }
+                            }
+                            
+                            for part in parts:
+                                part_dict = {}
+                                if part.text:
+                                    part_dict["text"] = part.text
+                                
+                                if part.inline_data:
+                                    part_dict["inlineData"] = {
+                                        "data": base64.b64encode(part.inline_data.data).decode("utf-8"),
+                                        "mimeType": part.inline_data.mime_type
+                                    }
+                                
+                                if part_dict:
+                                    response_data["serverContent"]["modelTurn"]["parts"].append(part_dict)
+                            
+                            if response_data["serverContent"]["modelTurn"]["parts"]:
+                                await websocket.send_text(json.dumps(response_data))
+
+                except Exception as e:
+                    print(f"[ERROR] google_to_client error: {e}")
+                    sys.stdout.flush()
+
+            # --- ЗАДАЧА 2: Клиент -> Google ---
+            async def client_to_google():
+                try:
+                    while True:
+                        data = await websocket.receive_text()
+                        message = json.loads(data)
+                        
+                        if "realtimeInput" in message:
+                            chunks = message["realtimeInput"].get("mediaChunks", [])
+                            for chunk in chunks:
+                                if "data" in chunk:
+                                    audio_bytes = base64.b64decode(chunk["data"])
+                                    await session.send_realtime_input(audio=audio_bytes)
+                        
+                        elif "client_content" in message:
+                            pass
+                                
+                except WebSocketDisconnect:
+                    print("[PROXY] Client disconnected.")
+                except Exception as e:
+                    print(f"[ERROR] client_to_google error: {e}")
+                sys.stdout.flush()
+
+            await asyncio.gather(google_to_client(), client_to_google())
+
+    except Exception as e_conn:
+        error_msg = str(e_conn)
+        print(f"\n[CRITICAL CONNECTION ERROR] {error_msg}")
+        sys.stdout.flush()
+        try:
+            await websocket.close(code=1011)
+        except:
+            pass
+
+if os.path.exists(FRONTEND_DIR):
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="static")
 
 if __name__ == "__main__":
-    agent = DirectOmniAgent()
-    try:
-        asyncio.run(agent.run())
-    except KeyboardInterrupt:
-        print("\n[*] Agent stopped by user.")
+    import uvicorn
+    port = int(os.getenv("PORT", 5000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
