@@ -9,27 +9,30 @@ class DirectOmniAgentApp {
     constructor() {
         console.log('[DEBUG] DirectOmniAgentApp initializing...');
 
+        // State
+        this.ws = null;
+        this.isConnected = false;
+        this.isVisionEnabled = false;
+        this.isReconnecting = false;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.resumptionToken = localStorage.getItem('gemini_resumption_token');
+
         // UI Elements
         this.energyOrb = document.getElementById('energyOrb');
         this.statusBadge = document.querySelector('.status-badge span');
         this.statusIndicator = document.querySelector('.status-badge .w-1\\.5, .status-badge .w-2');
         this.messages = document.getElementById('messages');
-        this.startSessionBtn = document.getElementById('startSessionBtn');
-        this.endSessionBtn = document.getElementById('endSessionBtn');
-        this.visionToggleBtn = document.getElementById('visionToggleBtn');
-        this.visionCamera = document.getElementById('visionCamera');
-        this.voiceIcon = document.getElementById('voiceIcon');
-        this.textChatWindow = document.getElementById('textChatWindow');
-
-        // State
-        this.ws = null;
-        this.isConnected = false;
-        this.isVisionEnabled = false;
+        this.chatMessages = document.getElementById('chatMessages');
+        this.chatModal = document.getElementById('chatModal');
+        this.closeChatBtn = document.getElementById('closeChatBtn');
+        this.modalOverlay = document.getElementById('modalOverlay');
 
         // Audio Context
         this.audioContext = null;
         this.processor = null;
         this.inputSource = null;
+        this.stream = null;
         this.playbackBuffer = [];
         this.isPlaying = false;
 
@@ -42,7 +45,26 @@ class DirectOmniAgentApp {
     }
 
     initEventListeners() {
-        // Слушатели событий добавляются в HTML или здесь, если нужно
+        if (this.closeChatBtn) {
+            this.closeChatBtn.onclick = () => this.hideChat();
+        }
+        if (this.modalOverlay) {
+            this.modalOverlay.onclick = () => this.hideChat();
+        }
+    }
+
+    showChat() {
+        if (this.chatModal) {
+            this.chatModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    hideChat() {
+        if (this.chatModal) {
+            this.chatModal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
     }
 
     async connect() {
@@ -52,18 +74,23 @@ class DirectOmniAgentApp {
 
         try {
             this.setConnectionStatus('connecting');
-            this.addMessage("Подключение к прокси...", "system");
+            if (!this.isReconnecting) {
+                this.addMessage("Подключение к Омни...", "system");
+                this.showChat();
+            }
 
-            // 1. Получаем доступ к микрофону
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    channelCount: 1,
-                    sampleRate: 16000, // Требуемая частота для Google
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true
-                }
-            });
+            // 1. Получаем доступ к микрофону если еще нет
+            if (!this.stream) {
+                this.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        channelCount: 1,
+                        sampleRate: 16000,
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+            }
 
             // 2. Открываем WebSocket к нашему серверу (Backend)
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -80,14 +107,20 @@ class DirectOmniAgentApp {
             this.ws.onopen = () => {
                 console.log("[DEBUG] WebSocket connected.");
                 this.isConnected = true;
-                this.textChatWindow?.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                this.isReconnecting = false;
+                this.reconnectAttempts = 0;
 
-                // Мы НЕ отправляем 'setup'. Сервер сам подключается к Google.
-                // Просто ждем сообщения от сервера.
-
+                // Отправляем setup с токеном возобновления, если он есть
+                const setupMessage = {
+                    setup: {}
+                };
+                if (this.resumptionToken) {
+                    setupMessage.setup.resumption_handle = this.resumptionToken;
+                }
+                this.ws.send(JSON.stringify(setupMessage));
 
                 // Запускаем обработку аудио с микрофона
-                this.initAudio(stream);
+                this.initAudio(this.stream);
 
                 // Запускаем пинг для предотвращения таймаута на Render
                 this.pingInterval = setInterval(() => {
@@ -110,7 +143,11 @@ class DirectOmniAgentApp {
                 }
             };
 
-            this.ws.onclose = () => this.disconnect();
+            this.ws.onclose = () => {
+                if (this.isConnected && !this.isReconnecting) {
+                    this.handleDisconnect();
+                }
+            };
             this.ws.onerror = (err) => {
                 console.error("WS Error:", err);
                 this.addMessage("Ошибка соединения с сервером", "error");
@@ -169,8 +206,25 @@ class DirectOmniAgentApp {
         // 1. Проверяем готовность сервера
         if (response.server_content && response.server_content.setup_complete) {
             this.setConnectionStatus('connected');
-            this.addMessage("Связь с Google установлена. Говорите!", "success");
+            if (!this.isReconnecting) {
+                this.addMessage("Омни на связи!", "success");
+            }
             return;
+        }
+
+        // 1.1 Токен возобновления
+        if (response.serverContent && response.serverContent.resumptionToken) {
+            this.resumptionToken = response.serverContent.resumptionToken;
+            localStorage.setItem('gemini_resumption_token', this.resumptionToken);
+            return;
+        }
+
+        // 1.2 Транскрипция ввода пользователя (VAD)
+        if (response.serverContent && response.serverContent.inputTranscription) {
+            const transcript = response.serverContent.inputTranscription.text;
+            if (transcript) {
+                this.addChatBubble(transcript, 'user');
+            }
         }
 
         // 2. Обрабатываем контент (Текст или Аудио)
@@ -192,7 +246,42 @@ class DirectOmniAgentApp {
 
             if (textOutput) {
                 this.addMessage(textOutput, "chat", "agent");
+                this.addChatBubble(textOutput, 'agent');
             }
+        }
+    }
+
+    addChatBubble(text, role) {
+        if (!this.chatMessages) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = `flex w-full mb-4 animate-in slide-in-from-bottom-2 duration-300 ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+        const bubble = document.createElement('div');
+        // Premium styles
+        if (role === 'user') {
+            bubble.className = "max-w-[85%] px-5 py-3 rounded-2xl bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg text-sm leading-relaxed border border-white/10";
+        } else {
+            bubble.className = "max-w-[85%] px-5 py-3 rounded-2xl bg-white/5 backdrop-blur-md text-slate-100 shadow-md text-sm leading-relaxed border border-white/5";
+        }
+
+        bubble.textContent = text;
+        wrapper.appendChild(bubble);
+        this.chatMessages.appendChild(wrapper);
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+
+    handleDisconnect() {
+        this.isConnected = false;
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.isReconnecting = true;
+            this.reconnectAttempts++;
+            const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
+            this.setConnectionStatus('connecting');
+            this.addMessage(`Связь прервана. Переподключение (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`, "system");
+            setTimeout(() => this.connect(), delay);
+        } else {
+            this.disconnect();
         }
     }
 
@@ -265,14 +354,23 @@ class DirectOmniAgentApp {
 
     disconnect() {
         this.isConnected = false;
-        if (this.ws) this.ws.close();
+        this.isReconnecting = false;
+        this.reconnectAttempts = 0;
+        if (this.ws) {
+            this.ws.onclose = null;
+            this.ws.close();
+        }
         if (this.audioContext) this.audioContext.close();
         if (this.pingInterval) clearInterval(this.pingInterval);
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
 
         this.setConnectionStatus('disconnected');
         this.addMessage("Сессия завершена", "system");
-        this.textChatWindow?.classList.add('opacity-0', 'translate-y-10');
         this.stopEnergyOrbAnimation();
+        this.hideChat();
     }
 
     toggleVision() {
