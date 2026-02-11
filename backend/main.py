@@ -39,12 +39,9 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         print(f"[PROXY] Попытка подключения к Google Gemini ({MODEL_ID})...")
         
-        # Конфигурация согласно запросу пользователя (с учетом версии SDK)
-        # Примечание: В новых версиях SDK response_modalities задается напрямую в корне конфига
+        # Обновленная конфигурация (параметры передаются напрямую)
         config = {
-            "generation_config": {
-                "response_modalities": ["AUDIO"]
-            }
+            "response_modalities": ["AUDIO"]
         }
         
         async with client.aio.live.connect(model=MODEL_ID, config=config) as session:
