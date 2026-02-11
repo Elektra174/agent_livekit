@@ -20,7 +20,7 @@ FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # Model from the working "Джун" project
-MODEL_ID = "models/gemini-2.0-flash-exp" 
+MODEL_ID = "models/gemini-2.5-flash-native-audio-preview-12-2025" 
 
 if not GOOGLE_API_KEY:
     print("WARNING: GOOGLE_API_KEY is not set!")
@@ -152,3 +152,4 @@ if os.path.exists(FRONTEND_DIR):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=5000)
+
