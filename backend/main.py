@@ -38,13 +38,11 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         config = {
             "system_instruction": "Ты — дружелюбный ИИ-помощник Омни. Отвечай кратко и по делу. Ты общаешься голосом, поэтому твои ответы должны быть разговорными.",
-            "generation_config": {
-                "response_modalities": ["AUDIO"],
-                "speech_config": {
-                    "voice_config": {
-                        "prebuilt_voice_config": {
-                            "voice_name": "Puck"
-                        }
+            "response_modalities": ["AUDIO"],
+            "speech_config": {
+                "voice_config": {
+                    "prebuilt_voice_config": {
+                        "voice_name": "Puck"
                     }
                 }
             }
