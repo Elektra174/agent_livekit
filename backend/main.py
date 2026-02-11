@@ -5,7 +5,6 @@ import base64
 import sys
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
-# FileResponse больше не нужен, так как StaticFiles(html=True) всё раздает сам
 from google import genai
 from dotenv import load_dotenv
 
@@ -18,15 +17,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# СТРОГО ЗАДАННАЯ МОДЕЛЬ
+# МОДЕЛЬ
+# Если при деплое будет ошибка 1007 (Region not supported), попробуйте сменить на:
+# MODEL_ID = "models/gemini-2.0-flash-exp"
 MODEL_ID = "models/gemini-2.5-flash-native-audio-preview-12-2025"
 
 if not GOOGLE_API_KEY:
     print("CRITICAL: GOOGLE_API_KEY is not set.")
     sys.stdout.flush()
 
-# Маршрут WebSocket должен быть определен ДО монтирования статических файлов,
-# чтобы избежать конфликтов маршрутизации.
+# Маршрут WebSocket должен быть определен ДО монтирования статики
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -37,15 +37,16 @@ async def websocket_endpoint(websocket: WebSocket):
     client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'api_version': 'v1alpha'})
     
     try:
-        # === СЕРВЕРНАЯ ИНИЦИАЛИЗАЦИЯ ===
+        # === ИСПРАВЛЕННАЯ КОНФИГУРАЦИЯ ===
+        # SDK требовал вынести поля response_modalities и speech_config 
+        # напрямую в корень config, а не в generation_config.
+        
         config = {
-            "generation_config": {
-                "response_modalities": ["AUDIO"],
-                "speech_config": {
-                    "voice_config": {
-                        "prebuilt_voice_config": {
-                            "voice_name": "Puck"
-                        }
+            "response_modalities": ["AUDIO"],
+            "speech_config": {
+                "voice_config": {
+                    "prebuilt_voice_config": {
+                        "voice_name": "Puck"
                     }
                 }
             },
@@ -124,6 +125,12 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e_conn:
         error_msg = str(e_conn)
         print(f"\n[CRITICAL CONNECTION ERROR] {error_msg}")
+        
+        # Если ошибка региона, даем подсказку
+        if "User location is not supported" in error_msg or "1007" in error_msg:
+            print("Решение: Попробуйте сменить MODEL_ID на 'models/gemini-2.0-flash-exp' в коде.")
+            print("Модель 2.5 может быть недоступна в регионе Oregon (us-west).")
+        
         sys.stdout.flush()
         try:
             await websocket.close(code=1011)
@@ -131,13 +138,8 @@ async def websocket_endpoint(websocket: WebSocket):
             pass
 
 # --- Serve Static Files (Frontend) ---
-# ИЗМЕНЕНИЕ ЗДЕСЬ:
-# Монтируем папку frontend в корень "/" вместо "/static".
-# Параметр html=True позволяет автоматически выдавать index.html при заходе на "/".
 if os.path.exists(FRONTEND_DIR):
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="static")
-else:
-    print(f"WARNING: Frontend directory not found at {FRONTEND_DIR}")
 
 if __name__ == "__main__":
     import uvicorn
