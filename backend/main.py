@@ -9,21 +9,20 @@ from fastapi.responses import FileResponse
 from google import genai
 from dotenv import load_dotenv
 
-# Load environment variables
+# --- Configuration ---
 load_dotenv()
 
 app = FastAPI()
 
-# Configuration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# Model ID (оставляем ваш)
+# СТРОГО ЗАДАННАЯ МОДЕЛЬ
 MODEL_ID = "models/gemini-2.5-flash-native-audio-preview-12-2025"
 
 if not GOOGLE_API_KEY:
-    print("WARNING: GOOGLE_API_KEY is not set!")
+    print("CRITICAL: GOOGLE_API_KEY is not set.")
     sys.stdout.flush()
 
 @app.get("/")
@@ -36,48 +35,58 @@ async def get_index():
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    print("\n[PROXY] Клиент подключен. Устанавливаем соединение с Google от имени сервера...")
+    print(f"[PROXY] Client connected. Initializing session with {MODEL_ID}...")
     sys.stdout.flush()
 
-    # Инициализация клиента
-    # Используем v1alpha, так как audio-preview API пока там
+    # Инициализация клиента Google
+    # v1alpha требуется для Live API функций
     client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'api_version': 'v1alpha'})
     
     try:
-        # !!! ГЛАВНОЕ ИЗМЕНЕНИЕ !!!
-        # Мы НЕ ждем setup от клиента. Мы создаем сессию ПРЯМО СЕЙЧАС.
-        # Это гарантирует, что IP адрес запроса будет IP адресом сервера (Render, Oregon).
+        # === СЕРВЕРНАЯ ИНИЦИАЛИЗАЦИЯ (SERVER-SIDE CONTROL) ===
+        # Мы создаем сессию здесь, на сервере.
+        # Это гарантирует, что Google видит IP сервера (Oregon), а не клиента.
         
         config = {
-            "response_modalities": ["AUDIO"],
-            "generation_config": {"response_modalities": ["AUDIO"]}
+            "generation_config": {
+                "response_modalities": ["AUDIO"], # Запрашиваем только аудио
+                "speech_config": {
+                    "voice_config": {
+                        "prebuilt_voice_config": {
+                            "voice_name": "Puck" # Можно изменить на Aoede, Charon, etc.
+                        }
+                    }
+                }
+            },
+            "system_instruction": {
+                "parts": [{"text": "Ты — дружелюбный ИИ-помощник Омни. Отвечай кратко и по делу."}]
+            }
         }
-        
+
         async with client.aio.live.connect(model=MODEL_ID, config=config) as session:
-            print("[PROXY] Сессия с Google Gemini установлена (Server-side control).")
+            print("[PROXY] Successfully connected to Google API.")
             
-            # Сообщаем клиенту, что все готово (имитация setup_complete)
-            await websocket.send_text(json.dumps({
-                "server_content": {"setup_complete": {}}
-            }))
+            # Отправляем клиенту сигнал, что мы готовы слушать
+            await websocket.send_text(json.dumps({"server_content": {"setup_complete": {}}}))
             sys.stdout.flush()
 
+            # === ЗАДАЧА 1: Google -> Клиент ===
             async def google_to_client():
-                """Пересылка сообщений от Google к Клиенту."""
                 try:
-                    async for message in session.receive():
-                        # Обработка разных форматов ответов от SDK
-                        content = getattr(message, 'server_content', None) or getattr(message, 'serverContent', None)
+                    async for response in session.receive():
+                        # SDK возвращает объект response
+                        content = getattr(response, 'server_content', None) or getattr(response, 'serverContent', None)
                         
                         if content:
-                            # Если это setup_complete (на всякий случай), пропускаем, так как мы уже отправили свой
-                            if hasattr(content, 'setup_complete') or hasattr(content, 'setupComplete'):
+                            # Если это setup_complete, игнорируем (мы уже отправили)
+                            if getattr(content, 'setup_complete', None):
                                 continue
 
-                            # Формируем ответ для браузера
+                            # Подготовка данных для отправки браузеру
+                            # Используем camelCase ключи, как принято в JSON API
                             response_data = {
-                                "server_content": {
-                                    "model_turn": {
+                                "serverContent": {
+                                    "modelTurn": {
                                         "parts": []
                                     }
                                 }
@@ -87,81 +96,72 @@ async def websocket_endpoint(websocket: WebSocket):
                             if model_turn:
                                 for part in model_turn.parts:
                                     part_dict = {}
+                                    
+                                    # Текст
+                                    if hasattr(part, 'text') and part.text:
+                                        part_dict["text"] = part.text
+                                    
+                                    # Аудио (inlineData)
                                     inline_data = getattr(part, 'inline_data', None) or getattr(part, 'inlineData', None)
                                     if inline_data:
-                                        part_dict["inline_data"] = {
+                                        # Конвертируем байты в base64 строку
+                                        part_dict["inlineData"] = {
                                             "data": base64.b64encode(inline_data.data).decode("utf-8"),
-                                            "mime_type": inline_data.mime_type
+                                            "mimeType": inline_data.mime_type
                                         }
-                                    if part.text:
-                                        part_dict["text"] = part.text
-                                    response_data["server_content"]["model_turn"]["parts"].append(part_dict)
+                                    
+                                    if part_dict:
+                                        response_data["serverContent"]["modelTurn"]["parts"].append(part_dict)
                             
-                            await websocket.send_text(json.dumps(response_data))
+                            # Отправляем JSON в браузер
+                            if response_data["serverContent"]["modelTurn"]["parts"]:
+                                await websocket.send_text(json.dumps(response_data))
+
                 except Exception as e:
-                    print(f"[DEBUG] Ошибка в google_to_client: {e}")
+                    print(f"[ERROR] google_to_client error: {e}")
                     sys.stdout.flush()
 
+            # === ЗАДАЧА 2: Клиент -> Google ===
             async def client_to_google():
-                """Пересылка сообщений от Клиента к Google."""
                 try:
                     while True:
                         data = await websocket.receive_text()
                         message = json.loads(data)
                         
-                        # Если клиент пытается прислать setup, игнорируем, так как сервер уже взял контроль
-                        if "setup" in message:
-                            print("[DEBUG] Клиент прислал setup, но сервер уже управляет сессией. Игнорируем.")
-                            sys.stdout.flush()
-                            continue
-                        
-                        # Пробрасываем остальные сообщения (аудио, текст)
-                        # Проверяем наличие реальных данных перед отправкой
-                        if "realtime_input" in message or "realtimeInput" in message or "client_content" in message or "clientContent" in message:
+                        # Пробрасываем реальный ввод (аудио/текст) в Google
+                        # Клиент использует camelCase (realtimeInput), SDK может принять это
+                        if "realtimeInput" in message:
+                            await session.send(message)
+                        elif "client_content" in message: # На случай старого формата
                             await session.send(message)
                                 
                 except WebSocketDisconnect:
-                    print("[PROXY] Клиент разорвал соединение")
+                    print("[PROXY] Client disconnected.")
                 except Exception as e:
-                    print(f"[DEBUG] Ошибка в client_to_google: {e}")
+                    print(f"[ERROR] client_to_google error: {e}")
                 sys.stdout.flush()
 
-            # Запускаем обе задачи
+            # Запускаем обе задачи параллельно
             await asyncio.gather(google_to_client(), client_to_google())
 
     except Exception as e_conn:
-        print(f"\n[КРИТИЧЕСКАЯ ОШИБКА ПОДКЛЮЧЕНИЯ] Ошибка при открытии сокета Google: {e_conn}")
+        error_msg = str(e_conn)
+        print(f"\n[CRITICAL CONNECTION ERROR] {error_msg}")
         
-        # Выводим понятную ошибку пользователю
-        if "User location is not supported" in str(e_conn) or "1007" in str(e_conn):
-            print("\n" + "!"*60)
-            print("ОШИБКА: Регион (IP) не поддерживается Google Gemini.")
-            print("Сервер должен быть запущен в поддерживаемом регионе (например, US West).")
-            print("!"*60 + "\n")
-        else:
-            print(f"[DEBUG] Тип ошибки: {type(e_conn)}")
-            sys.stdout.flush()
+        if "User location is not supported" in error_msg:
+            print("Region check failed even with server-side connection.")
+            print("Ensure Render server is in a supported region (e.g., Oregon).")
         
-        # Пытаемся закрыть websocket с кодом ошибки, чтобы клиент понял, что случилось
+        sys.stdout.flush()
         try:
-            await websocket.close(code=1011, reason="Server failed to connect to Google API")
+            await websocket.close(code=1011)
         except:
             pass
 
 # Serve static files
 if os.path.exists(FRONTEND_DIR):
-    # Монтируем статику, если папка существует
-    # Обратите внимание: при монтировании корня "/" он перекрывает маршрут "/" выше, 
-    # но FastAPI обычно приоритизирует маршруты в порядке добавления или точность совпадения.
-    # Чтобы избежать конфликтов, лучше использовать отдельный префикс для статики или проверить порядок.
-    # В данном случае get_index уже задан, но StaticFiles("/", ...) может его перехватить в зависимости от версии.
-    # Для надежности оставим как есть, так как get_index обычно имеет приоритет над файловой системой.
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
-    
-    # Или отдаем фронтенд так (если mount выше перекрывает):
-    # app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
-    # Используем 0.0.0.0 для доступа извне (Render)
     uvicorn.run(app, host="0.0.0.0", port=5000)
