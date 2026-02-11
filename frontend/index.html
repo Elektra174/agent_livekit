@@ -569,21 +569,42 @@
         </div>
     </div>
 
-    <!-- Hidden video elements for LiveKit -->
-    <video id="localVideo" class="hidden" autoplay muted></video>
-    <video id="remoteVideo" class="hidden" autoplay></video>
+    <!-- Premium Chat Modal -->
+    <div id="chatModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6 pb-20 sm:pb-6">
+        <div class="absolute inset-0 bg-background-dark/80 backdrop-blur-xl" id="modalOverlay"></div>
+        <div
+            class="relative w-full max-w-2xl h-[70vh] glass-panel rounded-3xl overflow-hidden flex flex-col shadow-2xl border border-white/10 animate-in fade-in zoom-in duration-300">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-bottom border-white/5 flex justify-between items-center bg-white/5">
+                <div class="flex items-center space-x-3">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-sm font-bold tracking-widest uppercase opacity-70">Live Dialogue</span>
+                </div>
+                <button id="closeChatBtn" class="p-2 hover:bg-white/10 rounded-full transition-colors active:scale-95">
+                    <span class="material-icons opacity-50">close</span>
+                </button>
+            </div>
 
-    <!-- Status elements -->
-    <div id="status" class="hidden"></div>
-    <div id="connectionStatus" class="hidden"></div>
+            <!-- Messages Container -->
+            <div id="chatMessages" class="flex-grow overflow-y-auto p-6 flex flex-col gap-4 scrollbar-hide">
+                <!-- Example messages will be injected here -->
+            </div>
 
-    <!-- Chat and transcript elements -->
-    <div id="textChatWindow"
-        class="w-full h-40 z-20 transition-all duration-500 opacity-0 translate-y-10 pointer-events-none">
-        <div id="messages"
-            class="glass-panel rounded-2xl p-4 h-full overflow-y-auto flex flex-col gap-2 scrollbar-hide pointer-events-auto">
+            <!-- Modal Footer (Status) -->
+            <div class="px-6 py-3 bg-white/5 border-t border-white/5 flex justify-center">
+                <div id="recordingStatus" class="flex items-center space-x-2 opacity-50">
+                    <span class="material-icons text-xs">graphic_eq</span>
+                    <span class="text-[10px] uppercase tracking-widest font-bold">Listening for voice...</span>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Hidden audio/video elements -->
+    <video id="localVideo" class="hidden" autoplay muted></video>
+    <video id="remoteVideo" class="hidden" autoplay></video>
+    <div id="status" class="hidden"></div>
+    <div id="connectionStatus" class="hidden"></div>
     <div id="userTranscript" class="hidden"></div>
     <div id="agentTranscript" class="hidden"></div>
 
