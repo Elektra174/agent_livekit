@@ -102,7 +102,11 @@ async def websocket_endpoint(websocket: WebSocket):
                             for chunk in chunks:
                                 if "data" in chunk:
                                     audio_bytes = base64.b64decode(chunk["data"])
-                                    await session.send_realtime_input(audio=audio_bytes)
+                                    # В новом google-genai передаем аудио как словарь или объект Blob
+                                    await session.send_realtime_input(audio={
+                                        "data": audio_bytes,
+                                        "mime_type": "audio/pcm;rate=16000"
+                                    })
                         
                         elif "client_content" in message:
                             pass
