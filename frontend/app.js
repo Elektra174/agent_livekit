@@ -97,7 +97,7 @@ class DirectOmniAgentApp {
                 const savedLanguage = localStorage.getItem('target_lang') || 'Russian';
                 const setupMessage = {
                     setup: {
-                        system_instruction: {
+                        systemInstruction: {
                             parts: [{ text: `Ты — добрый и весёлый ИИ-друг для детей по имени Омни-Агент. Говори на языке: ${savedLanguage}. Говори просто, весело и подбадривающе.` }]
                         }
                     }
@@ -152,12 +152,12 @@ class DirectOmniAgentApp {
             // Convert Float32 to Int16 PCM
             const pcmData = this.float32ToInt16(inputData);
 
-            // Send to Gemini
+            // Send to Gemini using camelCase
             const audioMessage = {
-                realtime_input: {
-                    media_chunks: [{
+                realtimeInput: {
+                    mediaChunks: [{
                         data: btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer))),
-                        mime_type: "audio/pcm"
+                        mimeType: "audio/pcm;rate=16000"
                     }]
                 }
             };
