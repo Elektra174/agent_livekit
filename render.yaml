@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: omni-agent-all-in-one
+    env: python
+    # Указываем Render, что нужно установить библиотеки
+    buildCommand: pip install -r requirements.txt
+    # Запускаем сервер в фоне (&), а затем агента
+    startCommand: |
+      python backend/server.py & 
+      python backend/agent.py start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: MEM0_API_KEY
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false

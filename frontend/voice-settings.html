@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ru">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0df2f2",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#050a0f",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+
+        .glass-card {
+            background: rgba(13, 242, 242, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(13, 242, 242, 0.1);
+        }
+
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(13, 242, 242, 0.4);
+        }
+
+        .gemini-gradient {
+            background: linear-gradient(135deg, #0df2f2 0%, #3b82f6 50%, #8b5cf6 100%);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Touch-friendly slider */
+        .slider-track {
+            touch-action: none;
+        }
+
+        #speedThumb {
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Responsive adjustments for all phone sizes */
+        /* iPhone SE (375x667) and smaller */
+        @media screen and (max-width: 375px) {
+            .phone-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                min-height: 100vh;
+            }
+
+            header {
+                padding: 0.75rem 1rem;
+            }
+
+            header h1 {
+                font-size: 1.125rem;
+            }
+
+            main {
+                padding: 0 1rem;
+                padding-bottom: 1rem;
+            }
+
+            .voice-option .w-20 {
+                width: 4rem;
+                height: 4rem;
+            }
+
+            .voice-option .w-8 {
+                width: 2rem;
+                height: 2rem;
+            }
+
+            .voice-option span {
+                font-size: 0.75rem;
+            }
+
+            .lang-option {
+                padding: 0.75rem;
+            }
+
+            .lang-option img {
+                width: 1.5rem;
+                height: 1.5rem;
+            }
+
+            .lang-option span {
+                font-size: 0.75rem;
+            }
+
+            #speedThumb {
+                width: 2.25rem;
+                height: 2.25rem;
+            }
+
+            footer button {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+        }
+
+        /* iPhone 12/13/14 (390x844) */
+        @media screen and (min-width: 376px) and (max-width: 390px) {
+            .phone-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                min-height: 100vh;
+            }
+
+            .voice-option .w-20 {
+                width: 4.5rem;
+                height: 4.5rem;
+            }
+
+            .voice-option .w-8 {
+                width: 2.25rem;
+                height: 2.25rem;
+            }
+        }
+
+        /* iPhone 14 Pro Max (430x932) and larger */
+        @media screen and (min-width: 391px) and (max-width: 430px) {
+            .phone-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                min-height: 100vh;
+            }
+        }
+
+        /* Samsung Galaxy S21 (360x800) */
+        @media screen and (max-width: 360px) {
+            .phone-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                min-height: 100vh;
+            }
+
+            header {
+                padding: 0.5rem 0.75rem;
+            }
+
+            header h1 {
+                font-size: 1rem;
+            }
+
+            main {
+                padding: 0 0.75rem;
+            }
+
+            .voice-option .w-20 {
+                width: 3.5rem;
+                height: 3.5rem;
+            }
+
+            .voice-option .w-8 {
+                width: 1.75rem;
+                height: 1.75rem;
+            }
+
+            .voice-option span {
+                font-size: 0.6875rem;
+            }
+
+            .lang-option {
+                padding: 0.625rem;
+            }
+
+            .lang-option img {
+                width: 1.25rem;
+                height: 1.25rem;
+            }
+
+            .lang-option span {
+                font-size: 0.6875rem;
+            }
+
+            #speedThumb {
+                width: 2rem;
+                height: 2rem;
+            }
+
+            footer button {
+                padding: 0.875rem;
+                font-size: 0.9375rem;
+            }
+        }
+
+        /* Samsung Galaxy S21 Ultra (412x915) */
+        @media screen and (min-width: 411px) and (max-width: 412px) {
+            .phone-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                min-height: 100vh;
+            }
+        }
+
+        /* Larger phones and tablets */
+        @media screen and (min-width: 431px) {
+            .phone-container {
+                width: 100%;
+                max-width: 430px;
+                height: 100vh;
+                min-height: 100vh;
+                margin: 0 auto;
+            }
+        }
+
+        /* Ensure touch targets are at least 44x44px */
+        button,
+        .voice-option,
+        .lang-option {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Prevent horizontal scroll on body */
+        body {
+            overflow-x: hidden;
+        }
+
+        /* Safe area support for notched phones */
+        .phone-container {
+            padding-top: env(safe-area-inset-top, 0);
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            padding-left: env(safe-area-inset-left, 0);
+            padding-right: env(safe-area-inset-right, 0);
+        }
+
+        /* Ensure footer is always visible */
+        footer {
+            position: sticky;
+            bottom: 0;
+            z-index: 40;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex justify-center overflow-x-hidden">
+    <!-- Phone Container -->
+    <div class="phone-container w-full max-w-[430px] min-h-screen relative overflow-hidden flex flex-col">
+        <!-- Background Ambient Glows -->
+        <div
+            class="absolute top-[-100px] left-[-100px] w-16 h-16 sm:w-64 sm:h-64 bg-primary/10 rounded-full blur-[100px]">
+        </div>
+        <div
+            class="absolute bottom-[20%] right-[-100px] w-20 h-20 sm:w-80 sm:h-80 bg-blue-600/10 rounded-full blur-[120px]">
+        </div>
+        <!-- Header -->
+        <header
+            class="sticky top-0 z-50 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between bg-background-dark/80 backdrop-blur-md">
+            <button id="backButton"
+                class="w-10 h-10 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px]">
+                <span class="material-icons text-white text-xl sm:text-xl">chevron_left</span>
+            </button>
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight">Настройки голоса</h1>
+            <div class="w-10 min-w-[40px]"></div> <!-- Spacer for centering -->
+        </header>
+        <!-- Main Content -->
+        <main class="flex-1 px-4 sm:px-6 space-y-6 sm:space-y-8 mt-3 sm:mt-4 overflow-y-auto hide-scrollbar pb-4">
+            <!-- Section 1: Agent Voice -->
+            <section class="space-y-3 sm:space-y-4">
+                <h2 class="text-xs sm:text-sm font-semibold uppercase tracking-widest text-primary/70 px-1">Голос агента
+                </h2>
+                <div class="flex gap-4 sm:gap-6 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory px-1">
+                    <!-- Nova -->
+                    <div class="flex flex-col items-center gap-2 sm:gap-3 snap-center voice-option min-w-[70px] sm:min-w-[90px]"
+                        data-voice="Nova">
+                        <div class="relative group">
+                            <div
+                                class="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-[2px] bg-gradient-to-tr from-primary to-purple-500">
+                                <img class="w-full h-full object-cover rounded-full"
+                                    data-alt="Modern minimalist female portrait with blue light"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqMvcUUXYdwhITwhgRpB2OFdUGj7DBC66b9YF_CCHHgM-qJksvwTvIzdq1DVr1JhG9-ecRXp4Yht-JDdyBGe52P_INKTYEHQBlf8_1zH0BuY8UrWAgELYU5kUfVYYD8J6FG53A-CrUl5-JHA4eGRB7IdaU1S05URsDchDdqrcWy62WC_yWs3FSEVhuNxVugJnCb8Wne6LbJJUu1yxzOSJ5Mt9jw5wD0jlsl7JLE3Ni73uVrMJjAgdefyL_91lGTXRPug19FWmVDr1D" />
+                            </div>
+                            <button
+                                class="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary flex items-center justify-center text-background-dark shadow-lg play-voice-btn min-w-[32px] min-h-[32px]">
+                                <span class="material-icons text-xs sm:text-sm">play_arrow</span>
+                            </button>
+                        </div>
+                        <span class="text-xs sm:text-sm font-medium">Nova</span>
+                    </div>
+                    <!-- Atlas -->
+                    <div class="flex flex-col items-center gap-2 sm:gap-3 snap-center voice-option min-w-[70px] sm:min-w-[90px]"
+                        data-voice="Atlas">
+                        <div class="relative group">
+                            <div
+                                class="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-[2px] bg-gradient-to-tr from-primary to-purple-500">
+                                <img class="w-full h-full object-cover rounded-full"
+                                    data-alt="Close-up male portrait with futuristic lighting"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEwGJ_Lohx5CPtE2CVb9Aq4eYD40_h5U7Hz_3sjBKzRvWw0BZd_mGIe3Xx2_0TM7aKZC73w3mQmv6z4kPauIZDUdBiAwnYZ-v-h0zxEOw4j0w3U9BBKcVGwDnNEa8J39FB-ecPJ1aEOgbp-NNKHAB-kK6XkU-28ex__glMyQ9V3_SLxN57XIYb-1lG18QhrkOTjFL4C9Bb2f53kGJOa-r9U33O2EQw2imBviAY_kkA8yW7sM66Mt3gS9B4eHRnOBef5MbrTR3l3zFs" />
+                            </div>
+                            <button
+                                class="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary flex items-center justify-center text-background-dark shadow-lg play-voice-btn min-w-[32px] min-h-[32px]">
+                                <span class="material-icons text-xs sm:text-sm">play_arrow</span>
+                            </button>
+                        </div>
+                        <span class="text-xs sm:text-sm font-medium">Atlas</span>
+                    </div>
+                    <!-- Echo -->
+                    <div class="flex flex-col items-center gap-2 sm:gap-3 snap-center voice-option min-w-[70px] sm:min-w-[90px]"
+                        data-voice="Echo">
+                        <div class="relative group">
+                            <div
+                                class="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-[2px] bg-gradient-to-tr from-primary to-purple-500">
+                                <img class="w-full h-full object-cover rounded-full"
+                                    data-alt="Abstract colorful neon facial profile"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAw3RG-O5zeDp2rfyIji3E7jc0NfXEsLOAUePJISkL8P1zRm2aJ6zYbJXKICciq9vQK1_SzZOUni2Wv6tJG3W35axqZiBx2e6EVgAIe0iiSJVJkmSut62ei7pfjkEMs9glXJRBRvaC6N4jxLLR2BjE7mldRJbegG-cdavLiTV-X9VTtneo7AGHoBJq9SZKTUaFcnpNqmYis2bD-XiPPHmnftgfj-coQtkshxkBt764T4ardoHcVahgydvZidJGnMfjp1eCCxd71mBUY" />
+                            </div>
+                            <button
+                                class="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary flex items-center justify-center text-background-dark shadow-lg play-voice-btn min-w-[32px] min-h-[32px]">
+                                <span class="material-icons text-xs sm:text-sm">play_arrow</span>
+                            </button>
+                        </div>
+                        <span class="text-xs sm:text-sm font-medium">Echo</span>
+                    </div>
+                    <!-- Lyric -->
+                    <div class="flex flex-col items-center gap-2 sm:gap-3 snap-center voice-option min-w-[70px] sm:min-w-[90px]"
+                        data-voice="Lyric">
+                        <div class="relative group">
+                            <div
+                                class="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-[2px] bg-gradient-to-tr from-primary to-purple-500">
+                                <img class="w-full h-full object-cover rounded-full"
+                                    data-alt="Stylish person with soft ambient lighting"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeCuRBNCCoZN9yAZcxJuKWqgWSO0BzIWo_UMgbzT3TmdskNCiil8Z9l93qttpf4grn2GC_-madjDE_B009Sa8bV4TELKAP5O8K3mGV3m8dfD6qAwwklJDNP8tWvQrZuU73usTjjYZVa8rtZR3IndYSdUIH6kHEZHX8a2cnuXMdLBvlOWGhbgt8iEjW680qXo4DvX8O7O25vNJHFKiyXj6CJ4Vuk3DNI9RNSn4_20kHP_6PX3rgyO7uuYKNqMgVEt8008Es2te0eOfh" />
+                            </div>
+                            <button
+                                class="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary flex items-center justify-center text-background-dark shadow-lg play-voice-btn min-w-[32px] min-h-[32px]">
+                                <span class="material-icons text-xs sm:text-sm">play_arrow</span>
+                            </button>
+                        </div>
+                        <span class="text-xs sm:text-sm font-medium">Lyric</span>
+                    </div>
+                    <!-- Fenrir -->
+                    <div class="flex flex-col items-center gap-2 sm:gap-3 snap-center voice-option min-w-[70px] sm:min-w-[90px]"
+                        data-voice="Fenrir">
+                        <div class="relative group">
+                            <div
+                                class="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-[2px] bg-gradient-to-tr from-primary to-purple-500">
+                                <img class="w-full h-full object-cover rounded-full"
+                                    data-alt="Dark mysterious figure with glowing eyes"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxQDu26XzK8kvD6gmIeoeEtn7HyLRPeIrLzZaYRcaWx6F3Ccizt7ul29jxqkl-JiclEA_dYiz86W1BxrQ57K6lFk7KVA0FlEI2a71ogvX6qAZ4mx3Qkw1pmNiSryApFRBbL5kjeCV_U98ZA3hSsJZOlpeqOCMtG8HTenO4gFFhUVJx4jyLABDdjkpSGHXVHEyc8iP4G8SDNOCMNAyGXlwNEUFHhDHPzBcfPteeBNUEa6g0J9pPrNufFhDmfZSnbUSnItRr06wqhJ6p" />
+                            </div>
+                            <button
+                                class="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary flex items-center justify-center text-background-dark shadow-lg play-voice-btn min-w-[32px] min-h-[32px]">
+                                <span class="material-icons text-xs sm:text-sm">play_arrow</span>
+                            </button>
+                        </div>
+                        <span class="text-xs sm:text-sm font-medium">Fenrir</span>
+                    </div>
+                </div>
+            </section>
+            <!-- Section 2: Target Language -->
+            <section class="space-y-3 sm:space-y-4">
+                <h2 class="text-xs sm:text-sm font-semibold uppercase tracking-widest text-primary/70 px-1">Язык
+                    обучения</h2>
+                <div class="grid grid-cols-2 gap-2 sm:gap-3">
+                    <!-- English (Selected) -->
+                    <button
+                        class="lang-option flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl glass-card border-primary/50 neon-glow relative overflow-hidden group min-h-[56px]"
+                        data-lang="English">
+                        <div class="absolute inset-0 bg-primary/5 opacity-100"></div>
+                        <img class="w-6 h-6 sm:w-8 sm:h-8 z-10" data-alt="Circular United Kingdom flag icon"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQi8As0otusjs5_JfKp8qGMOi7WOftirEuR_GB2fvWjlXQl3lI36dUKEcjp0KuSUSBkcKzuuIF8UT5jouRpSS2jdy8AwRYFbmiWww6HFv_8oDLJ70KVj7T_Ntn-wiPQfaWXgShi0YFyrRoTVtx9X1MXc1QxcesO8_gbLMbk-F3V3y5tXoHeJUp5gKmCQ4mQR_TTZdy-iE0yd-XH-GGJrorgJdX_1zKaO1cYjCayVi_Vl7IL0sGwnsjKp2ng_8qoTHTnCxrIg4eQtmw" />
+                        <span class="text-xs sm:text-sm font-bold z-10">English</span>
+                        <div class="ml-auto text-primary z-10">
+                            <span class="material-icons text-base sm:text-lg">check_circle</span>
+                        </div>
+                    </button>
+                    <!-- Russian -->
+                    <button
+                        class="lang-option flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl glass-card hover:bg-white/5 transition-all min-h-[56px]"
+                        data-lang="Russian">
+                        <img class="w-6 h-6 sm:w-8 sm:h-8" data-alt="Circular Russian flag icon"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIyHHM6-MGecqhYg8OwdJ9gRE2RAPvGkLwEi7dgFAGeNLE-spqH2Ou3E2jRdUjxT-Ehf3kaLQpPxmHWBkJS_GEG5PoUe9ZU0PsSsYxwsh_ylVAO2Poko4hG14FPpqejulZZIn3_-QWt_betekVad2W0oA0tAI6dHJUm3w_6to5JdAgkFjK8fjKCpwzNo3lRRIBPgG6uW3n53YN_Nd1H_gILhqoCAAcZx4Y0VbzDT4z3niBWk1-I31gdmK8C-P5gFWIXKS45PEL_QeJ" />
+                        <span class="text-xs sm:text-sm font-medium">Russian</span>
+                        <div class="ml-auto text-primary z-10">
+                            <span class="material-icons text-base sm:text-lg">check_circle</span>
+                        </div>
+                    </button>
+                    <!-- Spanish -->
+                    <button
+                        class="lang-option flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl glass-card hover:bg-white/5 transition-all min-h-[56px]"
+                        data-lang="Spanish">
+                        <img class="w-6 h-6 sm:w-8 sm:h-8" data-alt="Circular Spanish flag icon"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD157zdo4YEdooi8QUdD9W_2455fw93ZO4ab-RtCf6duSazFlB18RLORribphYaahgCpV2Y_0q52wwyqkTMbJOMmNimEGI-dW3vFuwBYyKb65WtKbVzo2MAR8Z3vfc0z_Pk7jWg-8ZmhWCwRf2LaYT4QZ_4WhTT5-jsRy78I2E_KqOCmN9lPlPcQ8DSHVkzdCgelGcPVPyR8HV7rGXvJabzYcB_O4ftqhlbyKD7zhEzynjFGO5tcl_Ebl0-dx6iZoPShSnyV5UILf-A" />
+                        <span class="text-xs sm:text-sm font-medium">Spanish</span>
+                        <div class="ml-auto text-primary z-10">
+                            <span class="material-icons text-base sm:text-lg">check_circle</span>
+                        </div>
+                    </button>
+                    <!-- German -->
+                    <button
+                        class="lang-option flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl glass-card hover:bg-white/5 transition-all min-h-[56px]"
+                        data-lang="German">
+                        <img class="w-6 h-6 sm:w-8 sm:h-8" data-alt="Circular German flag icon"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-G9KSr2vDZZ7b8WTgXyJdlzzc9xZZMiOr1X5KHM6vDQ0HAMI3Oaid_mu2RDllUGYUh5e_2nwP2ieJYPMi416LJcpSYDOq4mNqO551HnEEZyoDUZMb06uNgyYbYRvMG3tSPgKCnTQK0WzOAB0T0AvgDFT9OIaCcuQyfJpMgiXzyU8pELeAGML0KUbCe8KXC2xzsuMaSHiQFdEb4uPcMqXQTr_4ODYqFVZklWlF36eh9p8AUnbWJW-imFsXGe1LyO9Cwpcwt8sBuKc3" />
+                        <span class="text-xs sm:text-sm font-medium">German</span>
+                        <div class="ml-auto text-primary z-10">
+                            <span class="material-icons text-base sm:text-lg">check_circle</span>
+                        </div>
+                    </button>
+                    <!-- French -->
+                    <button
+                        class="lang-option flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl glass-card hover:bg-white/5 transition-all min-h-[56px]"
+                        data-lang="French">
+                        <img class="w-6 h-6 sm:w-8 sm:h-8" data-alt="Circular French flag icon"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxQDu26XzK8kvD6gmIeoeEtn7HyLRPeIrLzZaYRcaWx6F3Ccizt7ul29jxqkl-JiclEA_dYiz86W1BxrQ57K6lFk7KVA0FlEI2a71ogvX6qAZ4mx3Qkw1pmNiSryApFRBbL5kjeCV_U98ZA3hSsJZOlpeqOCMtG8HTenO4gFFhUVJx4jyLABDdjkpSGHXVHEyc8iP4G8SDNOCMNAyGXlwNEUFHhDHPzBcfPteeBNUEa6g0J9pPrNufFhDmfZSnbUSnItRr06wqhJ6p" />
+                        <span class="text-xs sm:text-sm font-medium">French</span>
+                        <div class="ml-auto text-primary z-10">
+                            <span class="material-icons text-base sm:text-lg">check_circle</span>
+                        </div>
+                    </button>
+                    <!-- Italian -->
+                    <button
+                        class="lang-option flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl glass-card hover:bg-white/5 transition-all min-h-[56px]"
+                        data-lang="Italian">
+                        <img class="w-6 h-6 sm:w-8 sm:h-8" data-alt="Circular Italian flag icon"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXrmasXecpwVfrhU7HPOkOtSB8hnzwjKUCQ-Tvt46JD5-QriqIoReW9TcChgbwIhaQYSXWzuNeADeAyum_w1tf3Oek68qWRirjDClgIB7YDJ5dqnB6_BJ-PXbmdpQ9guBc-aagbsDC5Eb07qOAQmZyl2T6Bm83IeD8TfbyI1nJYG4BSc6FnjJ-JO5X59uP6siJHwwArqauV72m_4pj9eWAV66kXy4WwL1jpookJwx8Ey5ikGP2wahd-FiPnmDeJPiHwg3yGGl6H2SC" />
+                        <span class="text-xs sm:text-sm font-medium">Italian</span>
+                        <div class="ml-auto text-primary z-10">
+                            <span class="material-icons text-base sm:text-lg">check_circle</span>
+                        </div>
+                    </button>
+                </div>
+            </section>
+            <!-- Section 3: Teacher Mode -->
+            <section class="glass-card p-4 sm:p-5 rounded-2xl flex items-center justify-between border-white/5">
+                <div class="space-y-0.5 sm:space-y-1">
+                    <h3 class="font-bold text-base sm:text-lg">Режим учителя</h3>
+                    <p class="text-[10px] sm:text-xs text-white/50 leading-relaxed">Исправлять ошибки в реальном времени
+                    </p>
+                </div>
+                <div class="relative">
+                    <input id="teacher-mode" class="sr-only peer" type="checkbox" />
+                    <div
+                        class="w-12 h-7 sm:w-14 sm:h-8 bg-white/10 rounded-full peer-checked:bg-primary transition-colors cursor-pointer">
+                    </div>
+                    <div
+                        class="absolute left-0.5 sm:left-1 top-0.5 sm:top-1 w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-full transition-transform peer-checked:translate-x-5 sm:peer-checked:translate-x-6">
+                    </div>
+                </div>
+            </section>
+            <!-- Section 4: Speech Speed -->
+            <section class="space-y-4 sm:space-y-6">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs sm:text-sm font-semibold uppercase tracking-widest text-primary/70 px-1">Скорость
+                        речи</h2>
+                    <span id="speedValue" class="text-primary font-bold text-xs sm:text-sm">1.1x</span>
+                </div>
+                <div class="px-1 sm:px-2 relative">
+                    <!-- Custom Slider UI -->
+                    <div class="h-1.5 w-full bg-white/10 rounded-full relative slider-track">
+                        <div id="speedFill"
+                            class="absolute left-0 top-0 h-full w-[60%] bg-primary rounded-full neon-glow"></div>
+                        <div id="speedThumb"
+                            class="absolute left-[60%] top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-full border-3 sm:border-4 border-background-dark shadow-xl cursor-pointer">
+                        </div>
+                    </div>
+                    <!-- Labels -->
+                    <div
+                        class="flex justify-between mt-3 sm:mt-4 text-[9px] sm:text-[10px] font-bold text-white/30 uppercase tracking-tighter">
+                        <span>Медленно</span>
+                        <span>Нормально</span>
+                        <span>Быстро</span>
+                    </div>
+                </div>
+            </section>
+            <!-- Advanced Voice Visualizer Container -->
+            <section class="py-3 sm:py-4">
+                <div id="voiceVisualizer" class="h-16 sm:h-20 w-full flex items-center justify-center gap-1 sm:gap-1.5">
+                    <div class="w-0.5 sm:w-1 h-3 sm:h-4 bg-primary/20 rounded-full"></div>
+                    <div class="w-0.5 sm:w-1 h-6 sm:h-8 bg-primary/40 rounded-full"></div>
+                    <div class="w-0.5 sm:w-1 h-9 sm:h-12 bg-primary/60 rounded-full"></div>
+                    <div class="w-0.5 sm:w-1 h-12 sm:h-16 bg-primary rounded-full neon-glow"></div>
+                    <div class="w-0.5 sm:w-1 h-8 sm:h-10 bg-primary/60 rounded-full"></div>
+                    <div class="w-0.5 sm:w-1 h-11 sm:h-14 bg-primary/40 rounded-full"></div>
+                    <div class="w-0.5 sm:w-1 h-5 sm:h-6 bg-primary/20 rounded-full"></div>
+                </div>
+            </section>
+        </main>
+        <!-- Bottom Action Bar -->
+        <footer class="mt-auto px-4 sm:px-6 pt-2 pb-6 sm:pb-8 bg-background-dark/95 backdrop-blur-md">
+            <button id="saveSettingsBtn"
+                class="w-full py-4 sm:py-5 rounded-2xl gemini-gradient text-background-dark font-bold text-base sm:text-lg shadow-[0_0_30px_rgba(13,242,242,0.2)] hover:scale-[0.98] transition-transform flex items-center justify-center gap-2 min-h-[52px]">
+                <span>Сохранить настройки</span>
+            </button>
+        </footer>
+        <!-- iOS Indicator -->
+        <div
+            class="absolute bottom-1.5 sm:bottom-2 left-1/2 -translate-x-1/2 w-28 sm:w-32 h-1 sm:h-1.5 bg-white/20 rounded-full">
+        </div>
+
+        <script>
+            // Add JavaScript functionality
+            document.addEventListener('DOMContentLoaded', function () {
+                // Voice name mapping to API names
+                const voiceNameMapping = {
+                    'Nova': 'aoede',
+                    'Atlas': 'charon',
+                    'Echo': 'puck',
+                    'Lyric': 'kore',
+                    'Fenrir': 'fenrir'
+                };
+
+                // Load settings from localStorage or use defaults
+                const savedVoiceApi = localStorage.getItem('selected_voice_api');
+                const savedLanguage = localStorage.getItem('target_lang');
+                const savedTeacherMode = localStorage.getItem('teacher_mode');
+                const savedSpeed = localStorage.getItem('speech_speed');
+
+                // Map API name back to display name for voice
+                let selectedVoice = 'Nova';
+                if (savedVoiceApi) {
+                    const apiToDisplay = Object.entries(voiceNameMapping).find(([_, api]) => api === savedVoiceApi);
+                    if (apiToDisplay) {
+                        selectedVoice = apiToDisplay[0];
+                    }
+                }
+
+                let selectedLanguage = savedLanguage || 'English';
+                let teacherMode = savedTeacherMode === 'true' || savedTeacherMode === null;
+                let speechSpeed = savedSpeed ? parseFloat(savedSpeed) : 1.1;
+
+                // Voice selection
+                const voiceOptions = document.querySelectorAll('.voice-option');
+
+                function updateVoiceSelectionUI() {
+                    voiceOptions.forEach(option => {
+                        const voiceName = option.dataset.voice;
+                        const gradientDiv = option.querySelector('.bg-gradient-to-tr');
+
+                        if (voiceName === selectedVoice) {
+                            option.style.opacity = '1';
+                            option.style.transform = 'scale(1)';
+                            if (gradientDiv) {
+                                gradientDiv.classList.remove('opacity-60');
+                            }
+                        } else {
+                            option.style.opacity = '0.6';
+                            option.style.transform = 'scale(0.95)';
+                            if (gradientDiv) {
+                                gradientDiv.classList.add('opacity-60');
+                            }
+                        }
+                    });
+                }
+
+                // Initialize voice selection UI
+                updateVoiceSelectionUI();
+
+                voiceOptions.forEach(option => {
+                    option.addEventListener('click', function () {
+                        selectedVoice = this.dataset.voice;
+                        updateVoiceSelectionUI();
+
+                        // Save to localStorage with API name
+                        const apiName = voiceNameMapping[selectedVoice];
+                        localStorage.setItem('selected_voice_api', apiName);
+
+                        console.log('Selected voice:', selectedVoice, 'API name:', apiName);
+                    });
+                });
+
+                // Language selection
+                const langOptions = document.querySelectorAll('.lang-option');
+
+                function updateLanguageSelectionUI() {
+                    langOptions.forEach(option => {
+                        const langName = option.dataset.lang;
+                        const checkIcon = option.querySelector('.material-icons');
+
+                        const bgOverlay = option.querySelector('.absolute.inset-0');
+
+                        if (langName === selectedLanguage) {
+                            if (checkIcon) {
+                                checkIcon.textContent = 'check_circle';
+                                checkIcon.style.display = 'block'; // Показываем галочку
+                            }
+                            option.classList.add('border-primary/50', 'neon-glow');
+                            option.classList.remove('hover:bg-white/5');
+                            if (bgOverlay) bgOverlay.style.opacity = '1';
+                        } else {
+                            if (checkIcon) {
+                                checkIcon.style.display = 'none'; // Скрываем галочку
+                            }
+                            option.classList.remove('border-primary/50', 'neon-glow');
+                            option.classList.add('hover:bg-white/5');
+                            if (bgOverlay) bgOverlay.style.opacity = '0';
+                        }
+                    });
+                }
+
+                // Initialize language selection UI
+                updateLanguageSelectionUI();
+                
+                // Убедимся, что все галочки изначально скрыты, кроме выбранного языка
+                langOptions.forEach(option => {
+                    const langName = option.dataset.lang;
+                    const checkIcon = option.querySelector('.material-icons');
+                    
+                    if (langName !== selectedLanguage && checkIcon) {
+                        checkIcon.style.display = 'none';
+                    }
+                });
+
+                langOptions.forEach(option => {
+                    option.addEventListener('click', function () {
+                        selectedLanguage = this.dataset.lang;
+                        updateLanguageSelectionUI();
+
+                        // Save to localStorage
+                        localStorage.setItem('target_lang', selectedLanguage);
+
+                        console.log('Selected language:', selectedLanguage);
+                    });
+                });
+
+                // Teacher mode toggle
+                const teacherModeToggle = document.getElementById('teacher-mode');
+                const teacherModeContainer = teacherModeToggle.closest('.relative');
+                teacherModeToggle.checked = teacherMode;
+
+                // Add click handler to the entire container for better usability
+                teacherModeContainer.addEventListener('click', function () {
+                    teacherModeToggle.checked = !teacherModeToggle.checked;
+                    // Dispatch change event to trigger existing listener
+                    const changeEvent = new Event('change');
+                    teacherModeToggle.dispatchEvent(changeEvent);
+                });
+
+                teacherModeToggle.addEventListener('change', function () {
+                    teacherMode = this.checked;
+                    localStorage.setItem('teacher_mode', teacherMode.toString());
+                    console.log('Teacher mode:', teacherMode);
+                });
+
+                // Speech speed slider
+                const sliderTrack = document.querySelector('.slider-track');
+                const speedThumb = document.getElementById('speedThumb');
+                const speedFill = document.getElementById('speedFill');
+                const speedValue = document.getElementById('speedValue');
+
+                const minSpeed = 0.5;
+                const maxSpeed = 2.0;
+                const initialPercent = ((speechSpeed - minSpeed) / (maxSpeed - minSpeed)) * 100;
+                speedThumb.style.left = `${initialPercent}%`;
+                speedFill.style.width = `${initialPercent}%`;
+                speedValue.textContent = `${speechSpeed.toFixed(1)}x`;
+
+                // Make slider interactive
+                let isDragging = false;
+
+                speedThumb.addEventListener('mousedown', startDrag);
+                speedThumb.addEventListener('touchstart', startDragTouch, { passive: false });
+
+                function startDrag(e) {
+                    e.preventDefault();
+                    isDragging = true;
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('mouseup', stopDrag);
+                }
+
+                function startDragTouch(e) {
+                    e.preventDefault();
+                    isDragging = true;
+                    document.addEventListener('touchmove', dragTouch, { passive: false });
+                    document.addEventListener('touchend', stopDrag);
+                }
+
+                function drag(e) {
+                    if (!isDragging) return;
+                    updateSliderPosition(e.clientX);
+                }
+
+                function dragTouch(e) {
+                    if (!isDragging) return;
+                    updateSliderPosition(e.touches[0].clientX);
+                }
+
+                function updateSliderPosition(clientX) {
+                    const rect = sliderTrack.getBoundingClientRect();
+                    let pos = (clientX - rect.left) / rect.width;
+                    pos = Math.max(0, Math.min(1, pos));
+
+                    speedThumb.style.left = `${pos * 100}%`;
+                    speedFill.style.width = `${pos * 100}%`;
+
+                    speechSpeed = minSpeed + (pos * (maxSpeed - minSpeed));
+                    speedValue.textContent = `${speechSpeed.toFixed(1)}x`;
+
+                    // Save to localStorage
+                    localStorage.setItem('speech_speed', speechSpeed.toString());
+                }
+
+                function stopDrag() {
+                    isDragging = false;
+                    document.removeEventListener('mousemove', drag);
+                    document.removeEventListener('touchmove', dragTouch);
+                    console.log('Speech speed:', speechSpeed.toFixed(1) + 'x');
+                }
+
+                // Play voice buttons
+                const playButtons = document.querySelectorAll('.play-voice-btn');
+                playButtons.forEach(button => {
+                    button.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        const voiceOption = this.closest('.voice-option');
+                        const voiceName = voiceOption.dataset.voice;
+                        console.log('Playing sample for voice:', voiceName);
+                    });
+                });
+
+                // Show notification function
+                function showNotification(message) {
+                    // Create notification element
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed top-20 left-1/2 -translate-x-1/2 px-6 py-3 bg-primary/90 text-background-dark font-bold rounded-xl shadow-lg z-50 transform transition-all duration-300';
+                    notification.textContent = message;
+                    document.body.appendChild(notification);
+
+                    // Animate in
+                    setTimeout(() => {
+                        notification.style.opacity = '1';
+                        notification.style.transform = 'translate(-50%, 0)';
+                    }, 10);
+
+                    // Remove after delay
+                    setTimeout(() => {
+                        notification.style.opacity = '0';
+                        notification.style.transform = 'translate(-50%, -20px)';
+                        setTimeout(() => {
+                            document.body.removeChild(notification);
+                        }, 300);
+                    }, 2000);
+                }
+
+                // Save settings button
+                const saveBtn = document.getElementById('saveSettingsBtn');
+                saveBtn.addEventListener('click', function () {
+                    // Ensure all settings are saved to localStorage
+                    const apiName = voiceNameMapping[selectedVoice];
+                    localStorage.setItem('selected_voice_api', apiName);
+                    localStorage.setItem('target_lang', selectedLanguage);
+                    localStorage.setItem('teacher_mode', teacherMode.toString());
+                    localStorage.setItem('speech_speed', speechSpeed.toString());
+
+                    console.log('Saving settings:', {
+                        voice: selectedVoice,
+                        voiceApi: apiName,
+                        language: selectedLanguage,
+                        teacherMode: teacherMode,
+                        speed: speechSpeed
+                    });
+
+                    // Show success notification
+                    showNotification('Настройки сохранены!');
+
+                    // Navigate to / after short delay
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                });
+
+                // Back button
+                const backButton = document.getElementById('backButton');
+                backButton.addEventListener('click', function () {
+                    window.location.href = '/';
+                });
+
+                // Voice visualizer animation
+                const visualizerBars = document.querySelectorAll('#voiceVisualizer div');
+                function animateVisualizer() {
+                    visualizerBars.forEach((bar, index) => {
+                        const minHeight = 4;
+                        const maxHeight = 16;
+                        const randomHeight = minHeight + Math.random() * (maxHeight - minHeight);
+                        const adjustedHeight = randomHeight * (speechSpeed / 1.1);
+                        bar.style.height = `${adjustedHeight}px`;
+                    });
+                    requestAnimationFrame(animateVisualizer);
+                }
+
+                animateVisualizer();
+            });
+        </script>
+    </div>
+</body>
+
+</html>

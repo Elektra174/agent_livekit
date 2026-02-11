@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1337ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101322",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+
+        .orb-gradient {
+            background: radial-gradient(circle, rgba(19, 55, 236, 0.4) 0%, rgba(147, 51, 234, 0.2) 50%, transparent 100%);
+        }
+
+        .glass-panel {
+            background: rgba(16, 19, 34, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .pulse-glow {
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+        }
+
+        .energy-wave {
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+        }
+
+        .vision-toggle-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vision-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .vision-toggle-btn:active {
+            transform: scale(0.95);
+        }
+
+        .vision-toggle-btn .material-icons {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .vision-toggle-btn.vision-on .material-icons {
+            color: #22d3ee;
+            text-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee, 0 0 30px #22d3ee;
+        }
+
+        /* Responsive adjustments for all phone sizes */
+        /* iPhone SE (375x667) and smaller */
+        @media screen and (max-width: 375px) {
+            .mobile-screen-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                min-height: 100vh;
+            }
+
+            .status-bar {
+                padding: 0.75rem 1rem;
+            }
+
+            .status-bar span {
+                font-size: 0.625rem;
+            }
+
+            .status-bar .material-icons {
+                font-size: 0.75rem;
+            }
+
+            nav {
+                padding: 0.75rem 1rem;
+            }
+
+            nav h1 {
+                font-size: 1.125rem;
+            }
+
+            .status-badge {
+                padding: 0.375rem 0.75rem;
+            }
+
+            .status-badge span {
+                font-size: 0.625rem;
+            }
+
+            .orb-container {
+                width: 14rem;
+                height: 14rem;
+            }
+
+            .orb-outer {
+                width: 12.5rem;
+                height: 12.5rem;
+            }
+
+            .orb-middle {
+                width: 11rem;
+                height: 11rem;
+            }
+
+            .orb-core {
+                width: 9rem;
+                height: 9rem;
+            }
+
+            .orb-core .material-icons {
+                font-size: 3rem;
+            }
+
+            .pip-camera {
+                width: 6rem;
+                height: 6rem;
+            }
+
+            .pip-camera .live-badge {
+                padding: 0.25rem 0.375rem;
+            }
+
+            .pip-camera .live-badge span:first-child {
+                width: 0.25rem;
+                height: 0.25rem;
+            }
+
+            .pip-camera .live-badge span:last-child {
+                font-size: 0.5rem;
+            }
+
+            .status-labels {
+                margin-top: 3rem;
+                gap: 0.5rem;
+            }
+
+            .status-label {
+                padding: 0.5rem;
+            }
+
+            .status-label span:first-child {
+                font-size: 0.5625rem;
+            }
+
+            .status-label span:last-child {
+                font-size: 0.75rem;
+            }
+
+            .status-label .material-icons {
+                font-size: 0.75rem;
+            }
+
+            footer {
+                padding: 1.5rem 1rem 2rem;
+            }
+
+            .gemini-btn {
+                padding: 0.625rem 1.25rem;
+            }
+
+            .gemini-btn span {
+                font-size: 0.75rem;
+            }
+
+            .action-btn {
+                padding: 1rem;
+            }
+
+            .action-btn span {
+                font-size: 1rem;
+            }
+
+            .action-btn .material-icons {
+                font-size: 1.25rem;
+            }
+
+            .home-indicator {
+                margin-top: 1.5rem;
+            }
+        }
+
+        /* iPhone 12/13/14 (390x844) */
+        @media screen and (min-width: 376px) and (max-width: 390px) {
+            .mobile-screen-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                min-height: 100vh;
+            }
+
+            .orb-container {
+                width: 16rem;
+                height: 16rem;
+            }
+
+            .orb-outer {
+                width: 14rem;
+                height: 14rem;
+            }
+
+            .orb-middle {
+                width: 12.5rem;
+                height: 12.5rem;
+            }
+
+            .orb-core {
+                width: 10.5rem;
+                height: 10.5rem;
+            }
+
+            .orb-core .material-icons {
+                font-size: 3.5rem;
+            }
+
+            .pip-camera {
+                width: 7rem;
+                height: 7rem;
+            }
+        }
+
+        /* iPhone 14 Pro Max (430x932) and larger */
+        @media screen and (min-width: 391px) and (max-width: 430px) {
+            .mobile-screen-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                min-height: 100vh;
+            }
+        }
+
+        /* Samsung Galaxy S21 (360x800) */
+        @media screen and (max-width: 360px) {
+            .mobile-screen-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                min-height: 100vh;
+            }
+
+            .status-bar {
+                padding: 0.5rem 0.75rem;
+            }
+
+            .status-bar span {
+                font-size: 0.5625rem;
+            }
+
+            .status-bar .material-icons {
+                font-size: 0.6875rem;
+            }
+
+            nav {
+                padding: 0.5rem 0.75rem;
+            }
+
+            nav h1 {
+                font-size: 1rem;
+            }
+
+            .status-badge {
+                padding: 0.25rem 0.5rem;
+            }
+
+            .status-badge span {
+                font-size: 0.5625rem;
+            }
+
+            .orb-container {
+                width: 12rem;
+                height: 12rem;
+            }
+
+            .orb-outer {
+                width: 11rem;
+                height: 11rem;
+            }
+
+            .orb-middle {
+                width: 9.5rem;
+                height: 9.5rem;
+            }
+
+            .orb-core {
+                width: 8rem;
+                height: 8rem;
+            }
+
+            .orb-core .material-icons {
+                font-size: 2.5rem;
+            }
+
+            .pip-camera {
+                width: 5rem;
+                height: 5rem;
+            }
+
+            .pip-camera .live-badge {
+                padding: 0.1875rem 0.25rem;
+            }
+
+            .pip-camera .live-badge span:first-child {
+                width: 0.1875rem;
+                height: 0.1875rem;
+            }
+
+            .pip-camera .live-badge span:last-child {
+                font-size: 0.4375rem;
+            }
+
+            .status-labels {
+                margin-top: 2.5rem;
+                gap: 0.375rem;
+            }
+
+            .status-label {
+                padding: 0.375rem;
+            }
+
+            .status-label span:first-child {
+                font-size: 0.5rem;
+            }
+
+            .status-label span:last-child {
+                font-size: 0.6875rem;
+            }
+
+            .status-label .material-icons {
+                font-size: 0.6875rem;
+            }
+
+            footer {
+                padding: 1.25rem 0.75rem 1.75rem;
+            }
+
+            .gemini-btn {
+                padding: 0.5rem 1rem;
+            }
+
+            .gemini-btn span {
+                font-size: 0.6875rem;
+            }
+
+            .action-btn {
+                padding: 0.875rem;
+            }
+
+            .action-btn span {
+                font-size: 0.9375rem;
+            }
+
+            .action-btn .material-icons {
+                font-size: 1.125rem;
+            }
+
+            .home-indicator {
+                margin-top: 1.25rem;
+            }
+        }
+
+        /* Samsung Galaxy S21 Ultra (412x915) */
+        @media screen and (min-width: 411px) and (max-width: 412px) {
+            .mobile-screen-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                min-height: 100vh;
+            }
+        }
+
+        /* Larger phones and tablets */
+        @media screen and (min-width: 431px) {
+            .mobile-screen-container {
+                width: 100%;
+                max-width: 430px;
+                height: 100vh;
+                min-height: 100vh;
+                margin: 0 auto;
+            }
+        }
+
+        /* Ensure touch targets are at least 44x44px */
+        button,
+        .action-btn {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Prevent horizontal scroll on body */
+        body {
+            overflow-x: hidden;
+        }
+
+        /* Safe area support for notched phones */
+        .mobile-screen-container {
+            padding-top: env(safe-area-inset-top, 0);
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            padding-left: env(safe-area-inset-left, 0);
+            padding-right: env(safe-area-inset-right, 0);
+        }
+
+        /* Ensure footer is always visible */
+        footer {
+            position: sticky;
+            bottom: 0;
+            z-index: 40;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col items-center justify-center overflow-hidden font-display overflow-x-hidden">
+    <!-- Mobile Screen Container -->
+    <div
+        class="mobile-screen-container relative w-full max-w-[430px] h-[932px] bg-background-dark shadow-2xl overflow-hidden flex flex-col border border-white/5">
+
+        <!-- Top Navigation -->
+        <nav class="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-6 w-full">
+            <div class="flex items-center space-x-1.5 sm:space-x-2">
+                <div
+                    class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary flex items-center justify-center min-w-[36px] min-h-[36px]">
+                    <span class="material-icons text-white text-base sm:text-lg">auto_awesome</span>
+                </div>
+                <h1 class="text-lg sm:text-xl font-bold tracking-tight">Omni-Agent</h1>
+            </div>
+            <div
+                class="status-badge flex items-center space-x-1.5 sm:space-x-2 bg-white/5 rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5 border border-white/10">
+                <div class="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-green-500 animate-pulse pulse-glow"></div>
+                <span
+                    class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-green-500">Connected</span>
+            </div>
+        </nav>
+        <!-- Main Visualizer Area -->
+        <main class="flex-grow flex flex-col items-center justify-center relative w-full px-4 sm:px-6">
+            <div class="orb-container relative w-72 h-72 flex items-center justify-center">
+                <div class="absolute inset-0 orb-gradient animate-pulse"></div>
+
+                <div
+                    class="orb-outer absolute w-64 h-64 border border-primary/30 rounded-full animate-[spin_10s_linear_infinite]">
+                </div>
+                <div
+                    class="orb-middle absolute w-56 h-56 border border-cyan-400/20 rounded-full animate-[spin_15s_linear_infinite_reverse]">
+                </div>
+
+                <div id="energyOrb"
+                    class="orb-core relative w-48 h-48 bg-gradient-to-br from-primary via-purple-600 to-cyan-500 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(19,55,236,0.5)] overflow-hidden transition-all duration-500 ease-in-out border-0">
+
+                    <span id="voiceIcon"
+                        class="material-icons text-white text-5xl sm:text-6xl drop-shadow-lg z-10">graphic_eq</span>
+
+                    <video id="visionCamera" autoplay playsinline muted
+                        class="absolute inset-0 w-full h-full object-cover hidden opacity-0 transition-opacity duration-500">
+                    </video>
+
+                    <div class="absolute inset-0 energy-wave bg-white/10 mix-blend-overlay rotate-45 scale-125"></div>
+                </div>
+            </div>
+
+            <div class="status-labels mt-12 sm:mt-16 w-full flex justify-between gap-2 sm:gap-4 px-1 sm:px-2">
+                <div class="status-label flex-1 glass-panel rounded-xl p-3 flex flex-col items-center">
+                    <span class="text-[8px] uppercase tracking-widest opacity-40 mb-1">Язык</span>
+                    <span id="languageLabel" class="text-sm font-semibold text-primary">RU</span>
+                </div>
+                <div class="status-label flex-1 glass-panel rounded-xl p-3 flex flex-col items-center">
+                    <span class="text-[8px] uppercase tracking-widest opacity-40 mb-1">Голос</span>
+                    <span id="voiceLabel" class="text-sm font-semibold text-cyan-400">Fenrir</span>
+                </div>
+                <div class="status-label flex-1 glass-panel rounded-xl p-3 flex flex-col items-center">
+                    <span class="text-[8px] uppercase tracking-widest opacity-40 mb-1">Vision</span>
+                    <button id="visionToggleBtn"
+                        class="vision-toggle-btn p-1 rounded-md transition-all active:scale-90">
+                        <span class="material-icons opacity-40 hover:opacity-100">visibility_off</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+        <!-- Bottom Controls -->
+        <footer
+            class="glass-panel w-full pt-6 sm:pt-8 pb-8 sm:pb-12 px-4 sm:px-6 rounded-t-xl border-t border-white/10 relative">
+            <!-- Gemini Floating Action Button -->
+            <div class="absolute -top-6 sm:-top-8 left-1/2 -translate-x-1/2">
+                <button
+                    class="gemini-btn gemini-pro-button bg-gradient-to-r from-slate-900 to-black p-[1px] rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.5)] active:scale-95 transition-transform">
+                    <div
+                        class="bg-slate-900 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full flex items-center space-x-2 sm:space-x-3 border border-white/10">
+                        <div class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
+                            <!-- Simplified Gemini-like SVG Symbol -->
+                            <svg class="w-full h-full" fill="none" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"
+                                    fill="url(#gemini_grad)"></path>
+                                <defs>
+                                    <linearGradient gradientUnits="userSpaceOnUse" id="gemini_grad" x1="2" x2="22"
+                                        y1="12" y2="12">
+                                        <stop stop-color="#4E82EE"></stop>
+                                        <stop offset="1" stop-color="#DB524E"></stop>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <span
+                            class="text-xs sm:text-sm font-bold tracking-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Gemini
+                            Pro App</span>
+                    </div>
+                </button>
+            </div>
+            <!-- Primary Actions -->
+            <div class="flex flex-col space-y-3 sm:space-y-4">
+                <button id="startSessionBtn"
+                    class="action-btn w-full bg-gradient-to-r from-primary to-purple-600 py-4 sm:py-5 rounded-full flex items-center justify-center space-x-2 sm:space-x-3 shadow-[0_10px_40px_rgba(19,55,236,0.3)] hover:brightness-110 active:scale-[0.98] transition-all min-h-[52px]">
+                    <span class="material-icons text-white text-xl sm:text-2xl">mic</span>
+                    <span class="text-white font-bold tracking-wide text-base sm:text-lg">Начать сессию</span>
+                </button>
+                <button id="voiceSettingsBtn"
+                    class="action-btn w-full bg-white/5 py-4 sm:py-5 rounded-full flex items-center justify-center space-x-2 sm:space-x-3 border border-white/10 hover:bg-primary/20 hover:border-primary/30 transition-all active:scale-[0.98] min-h-[52px]">
+                    <span class="material-icons text-primary text-xl sm:text-2xl">settings_voice</span>
+                    <span class="text-primary font-bold tracking-wide text-base sm:text-lg">Настройки голоса</span>
+                </button>
+                <button id="endSessionBtn"
+                    class="action-btn w-full bg-white/5 py-4 sm:py-5 rounded-full flex items-center justify-center space-x-2 sm:space-x-3 border border-white/10 hover:bg-red-500/10 hover:border-red-500/30 transition-all active:scale-[0.98] min-h-[52px]">
+                    <span class="material-icons text-red-500 text-xl sm:text-2xl">power_settings_new</span>
+                    <span class="text-red-500 font-bold tracking-wide text-base sm:text-lg">Завершить</span>
+                </button>
+            </div>
+            <!-- iOS Home Indicator -->
+            <div class="home-indicator w-28 sm:w-32 h-1 sm:h-1.5 bg-white/20 rounded-full mx-auto mt-6 sm:mt-10"></div>
+        </footer>
+        <!-- Decorative Elements -->
+        <div
+            class="absolute top-1/4 -left-20 w-32 sm:w-40 h-32 sm:h-40 bg-primary/10 blur-[100px] rounded-full pointer-events-none">
+        </div>
+        <div
+            class="absolute bottom-1/4 -right-20 w-32 sm:w-40 h-32 sm:h-40 bg-purple-600/10 blur-[100px] rounded-full pointer-events-none">
+        </div>
+    </div>
+
+    <!-- Hidden video elements for LiveKit -->
+    <video id="localVideo" class="hidden" autoplay muted></video>
+    <video id="remoteVideo" class="hidden" autoplay></video>
+
+    <!-- Status elements -->
+    <div id="status" class="hidden"></div>
+    <div id="connectionStatus" class="hidden"></div>
+
+    <!-- Chat and transcript elements -->
+    <div id="textChatWindow"
+        class="w-full h-40 z-20 transition-all duration-500 opacity-0 translate-y-10 pointer-events-none">
+        <div id="messages"
+            class="glass-panel rounded-2xl p-4 h-full overflow-y-auto flex flex-col gap-2 scrollbar-hide pointer-events-auto">
+        </div>
+    </div>
+    <div id="userTranscript" class="hidden"></div>
+    <div id="agentTranscript" class="hidden"></div>
+
+    <!-- Input fields -->
+    <input type="text" id="roomName" class="hidden" value="room-test-1">
+    <input type="text" id="participantName" class="hidden" value="user">
+
+    <script>
+        // Add JavaScript functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            // Voice name mapping from API name to display name
+            const voiceNameMapping = {
+                'aoede': 'Nova',
+                'charon': 'Atlas',
+                'puck': 'Echo',
+                'kore': 'Lyric',
+                'fenrir': 'Fenrir'
+            };
+
+            // Load and display settings from localStorage
+            function loadAndDisplaySettings() {
+                const savedVoiceApi = localStorage.getItem('selected_voice_api');
+                const savedLanguage = localStorage.getItem('target_lang');
+                const savedTeacherMode = localStorage.getItem('teacher_mode');
+
+                // Update language label
+                const languageLabel = document.getElementById('languageLabel');
+                if (languageLabel && savedLanguage) {
+                    // Get first 2 letters of language for display
+                    const langCode = savedLanguage.substring(0, 2).toUpperCase();
+                    languageLabel.textContent = langCode;
+                }
+
+                // Update voice label
+                const voiceLabel = document.getElementById('voiceLabel');
+                if (voiceLabel && savedVoiceApi) {
+                    const displayName = voiceNameMapping[savedVoiceApi] || 'Fenrir';
+                    voiceLabel.textContent = displayName;
+                } else if (voiceLabel) {
+                    // Set default voice to Fenrir
+                    voiceLabel.textContent = 'Fenrir';
+                }
+
+                console.log('Settings loaded:', {
+                    voice: savedVoiceApi,
+                    language: savedLanguage,
+                    teacherMode: savedTeacherMode
+                });
+            }
+
+            // Load settings on page load
+            loadAndDisplaySettings();
+
+
+
+            // Start Session button
+            const startSessionBtn = document.getElementById('startSessionBtn');
+            startSessionBtn.addEventListener('click', function () {
+                // Trigger connection in the main app with delayed check
+                const checkAndConnect = () => {
+                    if (window.mainApp && typeof window.mainApp.connect === 'function') {
+                        window.mainApp.connect();
+                    } else {
+                        console.error('Main app not found or connect function not available');
+                    }
+                };
+
+                // Try immediately first
+                checkAndConnect();
+
+                // If not available, try after a short delay
+                if (!(window.mainApp && typeof window.mainApp.connect === 'function')) {
+                    setTimeout(checkAndConnect, 100);
+                }
+            });
+
+            // Voice Settings button
+            const voiceSettingsBtn = document.getElementById('voiceSettingsBtn');
+            voiceSettingsBtn.addEventListener('click', function () {
+                window.location.href = '/voice-settings';
+            });
+
+            // End Session button
+            const endSessionBtn = document.getElementById('endSessionBtn');
+            endSessionBtn.addEventListener('click', function () {
+                // Trigger disconnection in the main app with delayed check
+                const checkAndDisconnect = () => {
+                    if (window.mainApp && typeof window.mainApp.disconnect === 'function') {
+                        window.mainApp.disconnect();
+                    } else {
+                        console.error('Main app not found or disconnect function not available');
+                    }
+                };
+
+                // Try immediately first
+                checkAndDisconnect();
+
+                // If not available, try after a short delay
+                if (!(window.mainApp && typeof window.mainApp.disconnect === 'function')) {
+                    setTimeout(checkAndDisconnect, 100);
+                }
+            });
+
+            // Vision Toggle button
+            const visionToggleBtn = document.getElementById('visionToggleBtn');
+            if (visionToggleBtn) {
+                visionToggleBtn.addEventListener('click', function () {
+                    // Trigger vision mode toggle in the main app with delayed check
+                    const checkAndToggleVision = () => {
+                        if (window.mainApp && typeof window.mainApp.toggleVision === 'function') {
+                            window.mainApp.toggleVision();
+                        } else {
+                            console.error('Main app not found or toggleVision function not available');
+                        }
+                    };
+
+                    // Try immediately first
+                    checkAndToggleVision();
+
+                    // If not available, try after a short delay
+                    if (!(window.mainApp && typeof window.mainApp.toggleVision === 'function')) {
+                        setTimeout(checkAndToggleVision, 100);
+                    }
+                });
+            }
+
+            // Gemini Pro button
+            const geminiProButton = document.querySelector('.gemini-pro-button');
+            if (geminiProButton) {
+                geminiProButton.addEventListener('click', function () {
+                    openGeminiApp();
+                });
+            }
+        });
+
+        function openGeminiApp() {
+            const webUrl = "https://gemini.google.com/app";
+
+            // Пытаемся открыть ссылку.
+            // Если приложение установлено, оно перехватит этот URL.
+            window.location.href = webUrl;
+        }
+    </script>
+
+    <!-- LiveKit Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client@1.15.8/dist/livekit-client.umd.min.js"></script>
+
+    <!-- Main Application Script -->
+    <script src="app.js"></script>
+</body>
+
+</html>
